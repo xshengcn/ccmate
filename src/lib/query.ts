@@ -45,3 +45,10 @@ export const useWriteConfigFile = () => {
     },
   });
 };
+
+
+export const useBackupClaudeConfigs = () => {
+  return useMutation({
+    mutationFn: () => invoke<void>("backup_claude_configs"),
+  });
+};
