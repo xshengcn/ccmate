@@ -9,25 +9,32 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Custom Title Bar - Draggable Region with traffic lights space */}
-      <div 
-        data-tauri-drag-region 
-        className="h-12 bg-zinc-50 border-b flex items-center select-none cursor-default"
+      <div
+        data-tauri-drag-region
+        className=""
         style={{ WebkitUserSelect: 'none', WebkitAppRegion: 'drag' } as React.CSSProperties}
       >
-        <div className="w-20" /> {/* Space for macOS traffic lights */}
-        <span className="text-sm font-medium text-muted-foreground">cc-config</span>
       </div>
-      
+
       <div className="flex flex-1 overflow-hidden">
-        <nav className="w-[200px] bg-zinc-50">
+        <nav className="w-[200px] bg-zinc-50" data-tauri-drag-region>
+          <div
+            data-tauri-drag-region
+            className="h-10"
+            style={{ WebkitUserSelect: 'none', WebkitAppRegion: 'drag' } as React.CSSProperties}
+          >
+          </div>
           <ul className="px-3 pt-3">
             <li>
               <NavLink
                 to="/"
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-xl cursor-default select-none",
-                    isActive && "bg-primary text-primary-foreground"
+                    "flex items-center gap-2 px-3 py-2 rounded-xl cursor-default select-none ",
+                    {
+                      "bg-primary text-primary-foreground": isActive,
+                      "hover:bg-zinc-100": !isActive
+                    }
                   )
                 }
               >
@@ -37,8 +44,8 @@ export function Layout() {
             </li>
           </ul>
         </nav>
-        <ScrollArea className="flex-1 h-[calc(100vh-3rem)]">
-          <main className="">
+        <ScrollArea className="flex-1 h-screen">
+          <main className="" data-tauri-drag-region>
             <Outlet />
           </main>
         </ScrollArea>

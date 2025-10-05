@@ -1,11 +1,20 @@
 import { useForm, Controller } from "react-hook-form";
 import { set, get, transform, isEmpty, isPlainObject } from "lodash-es";
+import { match } from "ts-pattern";
 import { useStore, useUpdateStore } from "../lib/query";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
-import { ChevronLeftIcon } from "lucide-react";
+import { ChevronLeftIcon, ZapIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState, useEffect, useRef } from "react";
 
 type FieldConfig = {
   label: string;
@@ -99,6 +108,24 @@ const fields: SectionConfig[] = [
         name: "env.ANTHROPIC_MODEL",
         type: "text",
         description: "Name of the model setting to use"
+      },
+      {
+        label: "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+        name: "env.ANTHROPIC_DEFAULT_HAIKU_MODEL",
+        type: "text",
+        description: "Default Haiku model configuration"
+      },
+      {
+        label: "ANTHROPIC_DEFAULT_OPUS_MODEL",
+        name: "env.ANTHROPIC_DEFAULT_OPUS_MODEL",
+        type: "text",
+        description: "Default Opus model configuration"
+      },
+      {
+        label: "ANTHROPIC_DEFAULT_SONNET_MODEL",
+        name: "env.ANTHROPIC_DEFAULT_SONNET_MODEL",
+        type: "text",
+        description: "Default Sonnet model configuration"
       },
       {
         label: "ANTHROPIC_SMALL_FAST_MODEL",
@@ -239,25 +266,7 @@ const fields: SectionConfig[] = [
         type: "text",
         description: "Custom headers to add to the request (in 'Name: Value' format)"
       },
-      {
-        label: "ANTHROPIC_DEFAULT_HAIKU_MODEL",
-        name: "env.ANTHROPIC_DEFAULT_HAIKU_MODEL",
-        type: "text",
-        description: "Default Haiku model configuration"
-      },
-      {
-        label: "ANTHROPIC_DEFAULT_OPUS_MODEL",
-        name: "env.ANTHROPIC_DEFAULT_OPUS_MODEL",
-        type: "text",
-        description: "Default Opus model configuration"
-      },
-      {
-        label: "ANTHROPIC_DEFAULT_SONNET_MODEL",
-        name: "env.ANTHROPIC_DEFAULT_SONNET_MODEL",
-        type: "text",
-        description: "Default Sonnet model configuration"
-      },
-
+      
       {
         label: "ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION",
         name: "env.ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION",
@@ -577,7 +586,50 @@ export function ConfigEditorPage() {
     });
   });
 
-  const { register, control, handleSubmit } = useForm({ defaultValues });
+  const { register, control, handleSubmit, setValue } = useForm({ defaultValues });
+  const [highlightedField, setHighlightedField] = useState<string | null>(null);
+  const highlightTimerRef = useRef<number | null>(null);
+
+  const applyPreset = (preset: 'glm' | 'kimi') => {
+    console.log('Applying preset:', preset);
+    
+    if (preset === 'glm') {
+      setValue('env.ANTHROPIC_BASE_URL', 'https://open.bigmodel.cn/api/anthropic');
+      setValue('env.ANTHROPIC_MODEL', 'GLM-4.6');
+      setValue('env.ANTHROPIC_DEFAULT_OPUS_MODEL', 'GLM-4.6');
+      setValue('env.ANTHROPIC_DEFAULT_SONNET_MODEL', 'GLM-4.6');
+      setValue('env.ANTHROPIC_DEFAULT_HAIKU_MODEL', 'GLM-4.5-Air');
+    } else if (preset === 'kimi') {
+      setValue('env.ANTHROPIC_BASE_URL', 'https://api.moonshot.cn/anthropic');
+      setValue('env.ANTHROPIC_MODEL', 'kimi-k2-turbo-preview');
+      setValue('env.ANTHROPIC_DEFAULT_OPUS_MODEL', 'kimi-k2-turbo-preview');
+      setValue('env.ANTHROPIC_DEFAULT_SONNET_MODEL', 'kimi-k2-turbo-preview');
+      setValue('env.ANTHROPIC_DEFAULT_HAIKU_MODEL', 'kimi-k2-turbo-preview');
+    }
+
+    // Clear any existing highlight timer
+    if (highlightTimerRef.current) {
+      clearTimeout(highlightTimerRef.current);
+    }
+
+    // Highlight the ANTHROPIC_AUTH_TOKEN field
+    console.log('Setting highlighted field to: env.ANTHROPIC_AUTH_TOKEN');
+    setHighlightedField('env.ANTHROPIC_AUTH_TOKEN');
+    highlightTimerRef.current = window.setTimeout(() => {
+      console.log('Clearing highlighted field');
+      setHighlightedField(null);
+      highlightTimerRef.current = null;
+    }, 1500); // 0.5s * 3 = 1.5s total animation time
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current);
+      }
+    };
+  }, []);
 
   const onSave = handleSubmit((formValues) => {
     const { configName, ...rest } = convertToNestedJSON(formValues);
@@ -590,10 +642,10 @@ export function ConfigEditorPage() {
 
   return (
     <div className="space-y-4">
-      <nav className="px-2 pt-4 flex items-center justify-between">
-        <Link to="/" className="inline-flex items-center gap-1 cursor-default hover:bg-zinc-50/50 rounded-lg p-2">
+      <nav className="px-2 py-2 flex items-center justify-between sticky top-0 bg-background z-10 border-b" data-tauri-drag-region>
+        <Link to="/" className="inline-flex items-center gap-1 cursor-default hover:bg-zinc-50 rounded-lg p-2">
           <ChevronLeftIcon size={14} className="text-muted-foreground" />
-          <span className="text-muted-foreground text-xs">所有配置</span>
+          <span className="text-muted-foreground text-sm">所有配置</span>
         </Link>
         <Button 
           onClick={onSave} 
@@ -601,93 +653,134 @@ export function ConfigEditorPage() {
           size="sm"
           className="mr-2"
         >
-          {updateStore.isPending ? "保存中..." : "保存"}
+          保存
         </Button>
       </nav>
 
       <section className="px-8">
-        <h3 className="pb-2 font-medium mx-2 text-muted-foreground text-xs">配置名</h3>
+        <h3 className="pb-2 font-medium mx-2 text-muted-foreground text-sm">配置名</h3>
         <input 
           {...register("configName")} 
           type="text" 
-          className="text-xs px-2 text-muted-foreground border rounded-sm w-[200px] h-7 bg-white" 
+          className="text-sm px-2 text-muted-foreground border rounded-sm w-[200px] h-7 bg-white" 
         />
       </section>
       <section className="space-y-8 pb-8">
         {fields.map((field) => (
           <div key={field.sectionName}>
-            <h3 className="px-10 py-2 font-medium  text-muted-foreground text-xs">{field.sectionName}</h3>
-            <div className="mx-8 rounded-lg bg-zinc-50/50 p-3 space-y-5">
+            <h3 className="px-10 py-2 font-medium  text-muted-foreground text-sm">{field.sectionName}</h3>
+            <div className="mx-8 rounded-lg bg-zinc-100/60 p-3 space-y-5">
               {field.fields.map((field) => (
                 <div className="" key={field.name}>
                   <div className="flex gap-2 items-center justify-between">
                     <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs min-w-40 shrink-0">{field.label}</div>
+                      <div className="text-muted-foreground text-sm min-w-40 shrink-0">{field.label}</div>
                       {field.description && (
-                        <p className="text-muted-foreground/50 text-xs line-clamp-1">{field.description}</p>
+                        <p className="text-muted-foreground/50 text-sm line-clamp-1">{field.description}</p>
                       )}
                     </div>
-                    {field.type === 'boolean' ? (
-                      <Controller
-                        name={field.name}
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <Select 
-                            value={value !== undefined ? String(value) : undefined}
-                            onValueChange={(val) => onChange(val === "true")}
-                          >
-                            <SelectTrigger className="w-1/2">
-                              <SelectValue placeholder="Default" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="true">true</SelectItem>
-                              <SelectItem value="false">false</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    ) : field.type === 'select' ? (
-                      <Controller
-                        name={field.name}
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <Select value={value} onValueChange={onChange}>
-                            <SelectTrigger className="w-1/2">
-                              <SelectValue placeholder={field.placeholder || "Select..."} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {field.options?.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    ) : field.type === 'textarea' ? (
-                      <Textarea 
-                        {...register(field.name)} 
-                        className="w-1/2 text-xs" 
-                        placeholder={field.placeholder}
-                      />
-                    ) : field.type === 'number' ? (
-                      <input 
-                        {...register(field.name, { 
-                          setValueAs: (v) => v === '' ? undefined : Number(v)
-                        })} 
-                        type="number" 
-                        className="text-xs px-2 text-muted-foreground border rounded-sm w-1/2 h-7 bg-white" 
-                        placeholder={field.placeholder}
-                      />
-                    ) : (
-                      <input 
-                        {...register(field.name)} 
-                        type="text" 
-                        className="text-xs px-2 text-muted-foreground border rounded-sm w-1/2 h-7 bg-white" 
-                        placeholder={field.placeholder}
-                      />
-                    )}
+                    {match({ type: field.type, name: field.name })
+                      .with({ type: 'boolean' }, () => (
+                        <Controller
+                          name={field.name}
+                          control={control}
+                          render={({ field: { onChange, value } }) => (
+                            <Select 
+                              value={value !== undefined ? String(value) : undefined}
+                              onValueChange={(val) => onChange(val === "true")}
+                            >
+                              <SelectTrigger className={`w-1/2 ${highlightedField === field.name ? 'animate-blink' : ''}`}>
+                                <SelectValue placeholder="Default" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="true">true</SelectItem>
+                                <SelectItem value="false">false</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      ))
+                      .with({ type: 'select' }, () => (
+                        <Controller
+                          name={field.name}
+                          control={control}
+                          render={({ field: { onChange, value } }) => (
+                            <Select value={value} onValueChange={onChange}>
+                              <SelectTrigger className={`w-1/2 ${highlightedField === field.name ? 'animate-blink' : ''}`}>
+                                <SelectValue placeholder={field.placeholder || "Select..."} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {field.options?.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      ))
+                      .with({ type: 'textarea' }, () => (
+                        <Textarea 
+                          {...register(field.name)} 
+                          className={`w-1/2 text-sm ${highlightedField === field.name ? 'animate-blink' : ''}`}
+                          placeholder={field.placeholder}
+                        />
+                      ))
+                      .with({ type: 'number' }, () => (
+                        <Input 
+                          {...register(field.name, { 
+                            setValueAs: (v) => v === '' ? undefined : Number(v)
+                          })} 
+                          type="number" 
+                          className={`text-sm w-1/2 h-7 ${highlightedField === field.name ? 'animate-blink' : ''}`}
+                          placeholder={field.placeholder}
+                        />
+                      ))
+                      .with({ name: 'env.ANTHROPIC_BASE_URL' }, () => (
+                        <div className="inline-flex items-center gap-2 w-1/2 flex-row-reverse">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 w-7 p-0 shrink-0"
+                              >
+                                <ZapIcon className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => applyPreset('glm')}>
+                                GLM
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => applyPreset('kimi')}>
+                                KIMI
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Input 
+                            {...register(field.name)} 
+                            type="text" 
+                            className={`text-sm h-7 flex-1 ${highlightedField === field.name ? 'animate-blink' : ''}`}
+                            placeholder={field.placeholder}
+                          />
+                        </div>
+                      ))
+                      .otherwise(() => {
+                        const className = `text-sm w-1/2 h-7 ${highlightedField === field.name ? 'animate-blink' : ''}`;
+                        if (highlightedField === field.name) {
+                          console.log('Highlighting field:', field.name, 'with class:', className);
+                        }
+                        return (
+                          <Input 
+                            {...register(field.name)} 
+                            type="text" 
+                            className={className}
+                            placeholder={field.placeholder}
+                          />
+                        );
+                      })}
                   </div>
                 </div>
               ))}

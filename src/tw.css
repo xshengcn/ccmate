@@ -114,13 +114,60 @@
   * {
     @apply border-border outline-ring/50 box-border;
   }
-  html, body {
+
+  html,
+  body {
     @apply text-foreground text-[14px];
     /* background: transparent;
     overflow: hidden; */
+
+    /* Native-like scrolling behavior */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+
+    /* Native text selection */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Prevent text selection during drag operations */
+    -webkit-user-select: none;
+    user-select: none;
   }
+
   #root {
     /* @apply rounded-xl overflow-hidden shadow-2xl; */
     /* min-height: 100vh; */
   }
+
+  @keyframes blink-highlight {
+    0% {
+      background-color: rgb(254 249 195);
+      box-shadow: 0 0 0 3px rgb(254 240 138 / 0.5);
+    }
+    50% {
+      background-color: rgb(254 240 138);
+      box-shadow: 0 0 0 4px rgb(254 240 138);
+    }
+    100% {
+      background-color: rgb(254 249 195);
+      box-shadow: 0 0 0 3px rgb(254 240 138 / 0.5);
+    }
+  }
+
+  input.animate-blink,
+  textarea.animate-blink,
+  button.animate-blink {
+    animation-name: blink-highlight !important;
+    animation-duration: 0.5s !important;
+    animation-timing-function: ease-in-out !important;
+    animation-iteration-count: 3 !important;
+    animation-fill-mode: forwards !important;
+  }
+
+  a, button {
+    cursor: default;
+    user-select: none;
+  }
+
 }

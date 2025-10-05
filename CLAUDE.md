@@ -38,7 +38,6 @@ pnpm preview
 
 ### Frontend Structure
 - `src/main.tsx` - App entry point with React Query client setup
-- `src/App.tsx` - Main application component with config editor
 - `src/lib/query.ts` - React Query hooks and API functions
 - `src/lib/utils.ts` - Utility functions
 - `src/components/ui/` - shadcn/ui components
