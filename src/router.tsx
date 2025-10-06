@@ -3,7 +3,6 @@ import { RouteWrapper } from "./components/RouteWrapper";
 import { Layout } from "./components/Layout";
 import { ConfigSwitcherPage } from "./pages/ConfigSwitcherPage";
 import { ConfigEditorPage } from "./pages/ConfigEditorPage";
-import { StoreEditPage } from "./pages/StoreEditPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 const router = createBrowserRouter([
@@ -28,14 +27,6 @@ const router = createBrowserRouter([
         element: (
           <RouteWrapper>
             <ConfigEditorPage />
-          </RouteWrapper>
-        ),
-      },
-      {
-        path: "store/:storeId/edit",
-        element: (
-          <RouteWrapper>
-            <StoreEditPage />
           </RouteWrapper>
         ),
       },
