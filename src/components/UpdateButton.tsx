@@ -1,6 +1,5 @@
 import { useCheckForUpdates, useInstallAndRestart } from "../lib/query";
-import { Button } from "./ui/button";
-import { RotateCwIcon, DownloadIcon, RefreshCcw, RefreshCcwIcon } from "lucide-react";
+import { RotateCwIcon, RefreshCcwIcon } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export function UpdateButton() {
@@ -11,7 +10,7 @@ export function UpdateButton() {
     return null;
   }
 
-  if (!updateInfo?.available) {
+  if (!updateInfo || !updateInfo.available) {
     return null;
   }
 

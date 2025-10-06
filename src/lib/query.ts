@@ -210,18 +210,10 @@ export interface UpdateInfo {
 export const useCheckForUpdates = () => {
   return useQuery({
     queryKey: ["check-updates"],
-    queryFn: () => {
-      console.log("🔄 Frontend: Checking for updates via Tauri command");
-      return invoke<UpdateInfo>("check_for_updates");
-    },
+    queryFn: () => invoke<UpdateInfo>("check_for_updates"),
     refetchInterval: 1000 * 60 * 30, // Check every 30 minutes
     retry: 1,
-    onSuccess: (data) => {
-      console.log("✅ Frontend: Update check completed", data);
-    },
-    onError: (error) => {
-      console.log("❌ Frontend: Update check failed", error);
-    },
+    refetchOnWindowFocus: false,
   });
 };
 
