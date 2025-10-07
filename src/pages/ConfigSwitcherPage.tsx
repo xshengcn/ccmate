@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 import { PencilLineIcon, PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { GLMBanner } from "@/components/GLMBanner";
+import { GLMBanner, GLMDialog } from "@/components/GLMBanner";
+import { ZAI } from "@lobehub/icons";
 
 export function ConfigSwitcherPage() {
   return (
@@ -17,7 +18,7 @@ export function ConfigSwitcherPage() {
 }
 
 function ConfigStores() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: stores } = useStores();
   const setCurrentStoreMutation = useSetCurrentConfig();
   const navigate = useNavigate();
@@ -39,11 +40,28 @@ function ConfigStores() {
 
   if (stores.length === 0) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Button variant="ghost" onClick={onCreateStore} className="">
-          <PlusIcon size={14} />
-          {t("configSwitcher.createConfig")}
-        </Button>
+      <div className="flex justify-center items-center h-screen" data-tauri-drag-region>
+        <div className="flex flex-col items-center gap-2">
+          <Button variant="ghost" onClick={onCreateStore} className="">
+            <PlusIcon size={14} />
+            {t("configSwitcher.createConfig")}
+          </Button>
+
+          <p className="text-sm text-muted-foreground" data-tauri-drag-region>
+            {t("configSwitcher.description")}
+          </p>
+
+          <div className="mt-4">
+            <GLMDialog 
+              trigger={
+                <Button variant="ghost" className="text-muted-foreground text-sm" size="sm">
+                  <ZAI />
+                  使用智谱 GLM4.6
+                </Button>
+              }
+            />
+          </div>
+        </div>
       </div>
     )
   }
@@ -63,7 +81,7 @@ function ConfigStores() {
         </Button>
       </div>
 
-      <GLMBanner className="mx-4 mt-4" />
+      {/* <GLMBanner className="mx-4 mt-4" /> */}
 
       <div className="grid grid-cols-3 lg:grid-cols-4 gap-3 p-4">
         {stores.map((store) => {

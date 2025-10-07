@@ -13,7 +13,8 @@ import { cn } from "@/lib/utils"
 import { useTranslation } from "react-i18next"
 
 export function GLMBanner(props: {
-  className?: string
+  className?: string,
+  hideCloseButton?: boolean
 }) {
   const { i18n } = useTranslation()
   const [isDismissed, setIsDismissed] = useState(localStorage.getItem('glm-banner-dismissed') === 'true')
@@ -51,9 +52,9 @@ export function GLMBanner(props: {
           }
           onSuccess={handleDismiss}
         />
-        <Button size="sm" variant="ghost" className="text-sm" onClick={handleDismiss}>
+        {!props.hideCloseButton && <Button size="sm" variant="ghost" className="text-sm" onClick={handleDismiss}>
           关闭
-        </Button>
+        </Button>}
       </div>
     </div>
   )
