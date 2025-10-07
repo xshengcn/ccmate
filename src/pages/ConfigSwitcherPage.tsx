@@ -1,11 +1,18 @@
 import { useTranslation } from "react-i18next";
 import { useStores, useSetCurrentConfig, useCreateConfig } from "../lib/query";
 import { cn } from "@/lib/utils";
-import { PencilLineIcon, PlusIcon } from "lucide-react";
+import { EllipsisVerticalIcon, PencilLineIcon, PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { GLMBanner, GLMDialog } from "@/components/GLMBanner";
+import { GLMDialog } from "@/components/GLMBanner";
 import { ZAI } from "@lobehub/icons";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function ConfigSwitcherPage() {
   return (
@@ -18,7 +25,7 @@ export function ConfigSwitcherPage() {
 }
 
 function ConfigStores() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { data: stores } = useStores();
   const setCurrentStoreMutation = useSetCurrentConfig();
   const navigate = useNavigate();
@@ -52,7 +59,7 @@ function ConfigStores() {
           </p>
 
           <div className="mt-4">
-            <GLMDialog 
+            <GLMDialog
               trigger={
                 <Button variant="ghost" className="text-muted-foreground text-sm" size="sm">
                   <ZAI />
@@ -75,10 +82,30 @@ function ConfigStores() {
             {t("configSwitcher.description")}
           </p>
         </div>
-        <Button variant="ghost" onClick={onCreateStore} className="text-muted-foreground" size="sm">
-          <PlusIcon size={14} />
-          {t("configSwitcher.createConfig")}
-        </Button>
+        <ButtonGroup>
+          <Button variant="outline" onClick={onCreateStore} className="text-muted-foreground" size="sm">
+            <PlusIcon size={14} />
+            {t("configSwitcher.createConfig")}
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="text-muted-foreground" size="sm">
+                <EllipsisVerticalIcon size={14} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <GLMDialog
+                trigger={
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <ZAI />
+                    使用智谱 GLM4.6
+                  </DropdownMenuItem>
+                }
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ButtonGroup>
+
       </div>
 
       {/* <GLMBanner className="mx-4 mt-4" /> */}
