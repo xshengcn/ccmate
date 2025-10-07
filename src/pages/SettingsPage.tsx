@@ -15,9 +15,13 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4" data-tauri-drag-region>{t("settings.title")}</h1>
-      <div className="space-y-6">
+    <div className="">
+      <div className="flex items-center p-3 border-b px-3 justify-between sticky top-0 bg-background z-10 mb-4" data-tauri-drag-region>
+        <div data-tauri-drag-region>
+          <h3 className="font-bold" data-tauri-drag-region>{t("settings.title")}</h3>
+        </div>
+      </div>
+      <div className="space-y-6 px-4">
         <div>
           <label className="block text-sm font-medium mb-2">{t("settings.language")}</label>
           <Select value={i18n.language} onValueChange={handleLanguageChange}>

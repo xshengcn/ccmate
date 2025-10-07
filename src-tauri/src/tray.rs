@@ -13,7 +13,7 @@ const TRAY_ID: &str = "main-tray";
 
 pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Creating system tray icon...");
-    
+
     // Load the tray icon - use smaller icon for tray on macOS
     let icon_bytes: &[u8] = if cfg!(target_os = "macos") {
         println!("✓ Using tray-icon.png for macOS");
@@ -21,7 +21,7 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::er
     } else {
         include_bytes!("../icons/icon.png")
     };
-    
+
     let icon = Image::from_bytes(icon_bytes)?;
     println!("✓ Icon loaded successfully");
 
@@ -33,7 +33,7 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::er
         .icon(icon)
         .menu(&menu)
         .tooltip("CC Mate - Config Manager")
-        .show_menu_on_left_click(true);  // Show menu on left click
+        .show_menu_on_left_click(true); // Show menu on left click
 
     // On macOS, make it a template icon for better system integration
     #[cfg(target_os = "macos")]
@@ -83,7 +83,7 @@ pub async fn build_tray_menu<R: Runtime>(
     app: &AppHandle<R>,
 ) -> Result<tauri::menu::Menu<R>, Box<dyn std::error::Error>> {
     println!("🔨 Building tray menu...");
-    
+
     // Get the stores asynchronously
     let stores_result = get_stores().await;
 
@@ -92,25 +92,47 @@ pub async fn build_tray_menu<R: Runtime>(
     match stores_result {
         Ok(stores) => {
             println!("✓ Found {} stores", stores.len());
-            
+
             if stores.is_empty() {
                 // No configs available
                 let no_configs_item =
                     MenuItemBuilder::with_id("no_configs", "No configs available").build(app)?;
-                menu_builder.item(&no_configs_item).build().map_err(|e| e.into())
+                menu_builder
+                    .item(&no_configs_item)
+                    .build()
+                    .map_err(|e| e.into())
             } else {
                 let mut builder = menu_builder;
+
+                // Add "Show Window" item
+                let show_item = MenuItemBuilder::with_id(
+                    "show_window",
+                    format!("Open {}", app.package_info().name.clone()),
+                )
+                .build(app)?;
+                builder = builder.item(&show_item);
+
+                let separator = tauri::menu::PredefinedMenuItem::separator(app)?;
+                builder = builder.item(&separator);
+
+                // Add "Configs" label
+                let configs_label = tauri::menu::MenuItem::with_id(app, "configs_label", "Configs", false, None::<&str>)?;
+                builder = builder.item(&configs_label);
 
                 // Add config items
                 for store in stores {
                     let prefix = if store.using { "✓ " } else { "  " };
                     let label = format!("{}{}", prefix, store.title);
-                    
-                    println!("  {} Config: {}", if store.using { "✓" } else { " " }, store.title);
-                    
+
+                    println!(
+                        "  {} Config: {}",
+                        if store.using { "✓" } else { " " },
+                        store.title
+                    );
+
                     let item = MenuItemBuilder::with_id(format!("config_{}", store.id), label)
                         .build(app)?;
-                    
+
                     builder = builder.item(&item);
                 }
 
@@ -118,16 +140,12 @@ pub async fn build_tray_menu<R: Runtime>(
                 let separator = tauri::menu::PredefinedMenuItem::separator(app)?;
                 builder = builder.item(&separator);
 
-                // Add "Show Window" item
-                let show_item =
-                    MenuItemBuilder::with_id("show_window", "Show Window").build(app)?;
-                builder = builder.item(&show_item);
-
-                // Add separator
-                builder = builder.item(&separator);
-
                 // Add "Quit" item
-                let quit_item = MenuItemBuilder::with_id("quit_app", "Quit").build(app)?;
+                let quit_item = MenuItemBuilder::with_id(
+                    "quit_app",
+                    format!("Quit {}", app.package_info().name.clone()),
+                )
+                .build(app)?;
                 builder = builder.item(&quit_item);
 
                 builder.build().map_err(|e| e.into())
@@ -144,26 +162,24 @@ pub async fn build_tray_menu<R: Runtime>(
 
 pub async fn rebuild_tray_menu<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     println!("🔄 Rebuilding tray menu...");
-    
+
     // Get the tray icon by ID
     if let Some(tray) = app.tray_by_id(TRAY_ID) {
         println!("✓ Tray icon found");
-        
+
         // Build new menu - await since we're already in async context
-        let new_menu = build_tray_menu(&app).await
-            .map_err(|e| {
-                println!("❌ Failed to build menu: {}", e);
-                format!("Failed to build tray menu: {}", e)
-            })?;
-        
+        let new_menu = build_tray_menu(&app).await.map_err(|e| {
+            println!("❌ Failed to build menu: {}", e);
+            format!("Failed to build tray menu: {}", e)
+        })?;
+
         println!("✓ New menu built successfully");
 
         // Set the new menu
-        tray.set_menu(Some(new_menu))
-            .map_err(|e| {
-                println!("❌ Failed to set menu: {}", e);
-                format!("Failed to set tray menu: {}", e)
-            })?;
+        tray.set_menu(Some(new_menu)).map_err(|e| {
+            println!("❌ Failed to set menu: {}", e);
+            format!("Failed to set tray menu: {}", e)
+        })?;
 
         println!("✅ Tray menu rebuilt successfully!");
         Ok(())
@@ -173,10 +189,7 @@ pub async fn rebuild_tray_menu<R: Runtime>(app: AppHandle<R>) -> Result<(), Stri
     }
 }
 
-pub fn handle_tray_menu_event<R: Runtime>(
-    app_handle: &AppHandle<R>,
-    event_id: &str,
-) -> bool {
+pub fn handle_tray_menu_event<R: Runtime>(app_handle: &AppHandle<R>, event_id: &str) -> bool {
     match event_id {
         "show_window" => {
             if let Some(window) = app_handle.get_webview_window("main") {
@@ -184,6 +197,10 @@ pub fn handle_tray_menu_event<R: Runtime>(
                 let _ = window.show();
                 let _ = window.set_focus();
             }
+            true
+        }
+        "configs_label" => {
+            // Ignore clicks on the configs label
             true
         }
         "quit_app" => {
@@ -198,7 +215,7 @@ pub fn handle_tray_menu_event<R: Runtime>(
             // Switch the config
             tauri::async_runtime::spawn(async move {
                 println!("🔄 Switching to config: {}", store_id);
-                
+
                 match set_using_config(store_id.clone()).await {
                     Ok(_) => {
                         println!("✅ Config switched successfully: {}", store_id);
@@ -216,7 +233,9 @@ pub fn handle_tray_menu_event<R: Runtime>(
 
                         // Get the store details to show the config name in notification
                         let notification_body = match get_store(store_id.clone()).await {
-                            Ok(store) => format!("Claude Code config switched to \"{}\"", store.title),
+                            Ok(store) => {
+                                format!("Claude Code config switched to \"{}\"", store.title)
+                            }
                             Err(_) => "Configuration has been switched successfully".to_string(),
                         };
 
@@ -246,4 +265,3 @@ pub fn handle_tray_menu_event<R: Runtime>(
         _ => false,
     }
 }
-

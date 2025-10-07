@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeftIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ZAI, Kimi } from '@lobehub/icons'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -597,10 +598,10 @@ export function ConfigEditorPage() {
   const [highlightedField, setHighlightedField] = useState<string | null>(null);
   const highlightTimerRef = useRef<number | null>(null);
 
-  const applyPreset = (preset: 'glm' | 'kimi') => {
+  const applyPreset = (preset: 'z.ai-china' | 'kimi' | "z.ai") => {
     console.log('Applying preset:', preset);
 
-    if (preset === 'glm') {
+    if (preset === 'z.ai-china') {
       setValue('env.ANTHROPIC_BASE_URL', 'https://open.bigmodel.cn/api/anthropic');
       setValue('env.ANTHROPIC_MODEL', 'GLM-4.6');
       setValue('env.ANTHROPIC_DEFAULT_OPUS_MODEL', 'GLM-4.6');
@@ -612,6 +613,12 @@ export function ConfigEditorPage() {
       setValue('env.ANTHROPIC_DEFAULT_OPUS_MODEL', 'kimi-k2-turbo-preview');
       setValue('env.ANTHROPIC_DEFAULT_SONNET_MODEL', 'kimi-k2-turbo-preview');
       setValue('env.ANTHROPIC_DEFAULT_HAIKU_MODEL', 'kimi-k2-turbo-preview');
+    } else if (preset === 'z.ai') {
+      setValue('env.ANTHROPIC_BASE_URL', 'https://api.z.ai/api/anthropic');
+      setValue('env.ANTHROPIC_MODEL', 'glm-4.6');
+      setValue('env.ANTHROPIC_DEFAULT_OPUS_MODEL', 'glm-4.6');
+      setValue('env.ANTHROPIC_DEFAULT_SONNET_MODEL', 'glm-4.6');
+      setValue('env.ANTHROPIC_DEFAULT_HAIKU_MODEL', 'glm-4.5-Air');
     }
 
     // Clear any existing highlight timer
@@ -788,11 +795,17 @@ export function ConfigEditorPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => applyPreset('glm')}>
-                                GLM
+                              <DropdownMenuItem onClick={() => applyPreset('z.ai')}>
+                                <ZAI size={12} />
+                                Z.ai
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => applyPreset('z.ai-china')}>
+                                <ZAI size={12} />
+                                Z.ai (China)
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => applyPreset('kimi')}>
-                                KIMI
+                                <Kimi size={12} />
+                                Kimi AI
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
