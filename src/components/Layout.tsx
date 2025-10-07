@@ -1,15 +1,13 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { cn } from "../lib/utils";
+import { cn, isMacOS } from "../lib/utils";
 import { FileJsonIcon, SettingsIcon, CpuIcon } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { UpdateButton } from "./UpdateButton";
-import { usePlatform } from "../hooks/usePlatform";
 
 export function Layout() {
   const { t } = useTranslation();
-  const { isMacOS } = usePlatform();
 
   const navLinks = [
     {
