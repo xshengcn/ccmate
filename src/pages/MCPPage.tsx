@@ -55,7 +55,7 @@ function MCPPageContent() {
     return JSON.stringify(server, null, 2);
   };
 
-  const serverEntries = Object.entries(mcpServers || {});
+  const serverEntries = Object.entries(mcpServers || {}).sort(([a], [b]) => a.localeCompare(b));
 
   return (
     <div className="">
