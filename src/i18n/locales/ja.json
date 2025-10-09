@@ -106,5 +106,10 @@
   "usageChart.last7Days": "過去 7 日間",
   "usageChart.startOfWeek": "今週の開始",
   "usageChart.startOfMonth": "今月の開始",
-  "usageChart.allTime": "全期間"
+  "usageChart.allTime": "全期間",
+  "navigation.memory": "メモリ",
+  "memory.title": "メモリ",
+  "memory.description": "Claude Code グローバルメモリを管理",
+  "memory.save": "保存",
+  "memory.saving": "保存中..."
 }

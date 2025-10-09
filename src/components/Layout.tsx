@@ -2,7 +2,7 @@ import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn, isMacOS } from "../lib/utils";
-import { FileJsonIcon, SettingsIcon, CpuIcon, ActivityIcon } from "lucide-react";
+import { FileJsonIcon, SettingsIcon, CpuIcon, ActivityIcon, BrainIcon } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { UpdateButton } from "./UpdateButton";
 
@@ -19,6 +19,11 @@ export function Layout() {
       to: "/mcp",
       icon: CpuIcon,
       label: t("navigation.mcp")
+    },
+    {
+      to: "/memory",
+      icon: BrainIcon,
+      label: t("navigation.memory")
     },
     {
       to: "/usage",
@@ -81,7 +86,7 @@ export function Layout() {
             </div>
           </div>
         </nav>
-        <ScrollArea className="flex-1 h-screen">
+        <ScrollArea className="flex-1 h-screen [&>div>div]:!block">
           <main className="" data-tauri-drag-region>
             <Outlet />
           </main>

@@ -106,5 +106,10 @@
   "usageChart.last7Days": "Derniers 7 jours",
   "usageChart.startOfWeek": "Début de la semaine",
   "usageChart.startOfMonth": "Début du mois",
-  "usageChart.allTime": "Toutes les périodes"
+  "usageChart.allTime": "Toutes les périodes",
+  "navigation.memory": "Mémoire",
+  "memory.title": "Mémoire",
+  "memory.description": "Gérer la mémoire globale de Claude Code",
+  "memory.save": "Sauvegarder",
+  "memory.saving": "Sauvegarde..."
 }

@@ -334,6 +334,37 @@ export const useProjectUsageFiles = () => {
   });
 };
 
+// Memory management hooks
+
+export interface MemoryFile {
+  path: string;
+  content: string;
+  exists: boolean;
+}
+
+export const useClaudeMemory = () => {
+  return useSuspenseQuery({
+    queryKey: ["claude-memory"],
+    queryFn: () => invoke<MemoryFile>("read_claude_memory"),
+  });
+};
+
+export const useWriteClaudeMemory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (content: string) => invoke<void>("write_claude_memory", { content }),
+    onSuccess: () => {
+      toast.success("Memory saved successfully");
+      queryClient.invalidateQueries({ queryKey: ["claude-memory"] });
+    },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to save memory: ${errorMessage}`);
+    },
+  });
+};
+
 // Helper function to rebuild tray menu
 const rebuildTrayMenu = async () => {
   try {

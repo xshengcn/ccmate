@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-markdown": "^6.4.0",
+    "@codemirror/language-data": "^6.5.1",
     "@hookform/resolvers": "^5.2.2",
     "@lobehub/icons": "^2.38.0",
     "@radix-ui/react-accordion": "^1.2.12",

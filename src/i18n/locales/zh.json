@@ -106,5 +106,10 @@
   "usageChart.last7Days": "最近 7 天",
   "usageChart.startOfWeek": "本周开始",
   "usageChart.startOfMonth": "本月开始",
-  "usageChart.allTime": "全部时间"
+  "usageChart.allTime": "全部时间",
+  "navigation.memory": "记忆",
+  "memory.title": "记忆",
+  "memory.description": "管理 Claude Code 全局记忆",
+  "memory.save": "保存",
+  "memory.saving": "保存中..."
 }

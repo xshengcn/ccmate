@@ -166,7 +166,9 @@ pub fn run() {
             install_and_restart,
             rebuild_tray_menu_command,
             unlock_cc_ext,
-            read_project_usage_files
+            read_project_usage_files,
+            read_claude_memory,
+            write_claude_memory
         ])
         .on_window_event(|window, event| {
             #[cfg(target_os = "macos")]

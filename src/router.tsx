@@ -6,6 +6,7 @@ import { ConfigEditorPage } from "./pages/ConfigEditorPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { MCPPage } from "./pages/MCPPage";
 import { UsagePage } from "./pages/UsagePage";
+import { MemoryPage } from "./pages/MemoryPage";
 
 const router = createBrowserRouter([
   {
@@ -53,6 +54,14 @@ const router = createBrowserRouter([
         element: (
           <RouteWrapper>
             <UsagePage />
+          </RouteWrapper>
+        ),
+      },
+      {
+        path: "memory",
+        element: (
+          <RouteWrapper>
+            <MemoryPage />
           </RouteWrapper>
         ),
       },

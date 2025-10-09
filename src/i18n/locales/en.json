@@ -107,5 +107,10 @@
   "usageChart.last7Days": "Last 7 days",
   "usageChart.startOfWeek": "Start of this week",
   "usageChart.startOfMonth": "Start of this month",
-  "usageChart.allTime": "All time"
+  "usageChart.allTime": "All time",
+  "navigation.memory": "Memory",
+  "memory.title": "Memory",
+  "memory.description": "Manage Claude Code global memory",
+  "memory.save": "Save",
+  "memory.saving": "Saving..."
 }
