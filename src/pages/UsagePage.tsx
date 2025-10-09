@@ -38,7 +38,7 @@ export function UsagePage() {
             <RefreshCwIcon className={cn({
               "animate-spin": isRefetching || isLoading,
             })} />
-            {isRefetching || isLoading ? "正在刷新" : "刷新"}
+            {isRefetching || isLoading ? t("usage.refreshing") : t("usage.refresh")}
           </Button>
         </div>
       </div>

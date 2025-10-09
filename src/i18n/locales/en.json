@@ -95,6 +95,8 @@
   "usage.outputTokens": "Output Tokens",
   "usage.cacheReadTokens": "Cache Read Tokens",
   "usage.cost": "Cost",
+  "usage.refresh": "Refresh",
+  "usage.refreshing": "Refreshing",
   "usageChart.noData": "No usage data available",
   "usageChart.modelFilter": "Model:",
   "usageChart.timeRange": "Time Range:",

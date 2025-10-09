@@ -94,6 +94,8 @@
   "usage.outputTokens": "输出 token",
   "usage.cacheReadTokens": "缓存读取 token",
   "usage.cost": "费用",
+  "usage.refresh": "刷新",
+  "usage.refreshing": "正在刷新",
   "usageChart.noData": "暂无使用数据",
   "usageChart.modelFilter": "模型：",
   "usageChart.timeRange": "时间范围：",

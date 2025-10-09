@@ -94,6 +94,8 @@
   "usage.outputTokens": "出力トークン",
   "usage.cacheReadTokens": "キャッシュ読み取りトークン",
   "usage.cost": "コスト",
+  "usage.refresh": "更新",
+  "usage.refreshing": "更新中",
   "usageChart.noData": "使用データがありません",
   "usageChart.modelFilter": "モデル：",
   "usageChart.timeRange": "時間範囲：",

@@ -94,6 +94,8 @@
   "usage.outputTokens": "Jetons de sortie",
   "usage.cacheReadTokens": "Jetons de lecture du cache",
   "usage.cost": "Coût",
+  "usage.refresh": "Actualiser",
+  "usage.refreshing": "Actualisation",
   "usageChart.noData": "Aucune donnée d'utilisation disponible",
   "usageChart.modelFilter": "Modèle :",
   "usageChart.timeRange": "Plage de temps :",
