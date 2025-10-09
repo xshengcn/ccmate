@@ -1,9 +1,17 @@
 name: "publish"
 
 on:
-  push:
-    branches:
-      - release
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (optional)'
+        required: false
+        type: string
+      create_release:
+        description: 'Create GitHub release'
+        required: true
+        type: boolean
+        default: true
 
 # This is the example for publishing a Universal macOS app with a signing certificate.
 # On each push to the `release` branch it will create or update a GitHub release, build your app, and upload the artifacts to the release.
