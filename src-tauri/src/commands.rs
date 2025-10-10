@@ -1284,6 +1284,55 @@ pub async fn read_claude_projects() -> Result<Vec<ProjectConfig>, String> {
     Ok(result)
 }
 
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct ClaudeConfigFile {
+    pub path: String,
+    pub content: Value,
+    pub exists: bool,
+}
+
+#[tauri::command]
+pub async fn read_claude_config_file() -> Result<ClaudeConfigFile, String> {
+    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+    let claude_json_path = home_dir.join(".claude.json");
+
+    let path_str = claude_json_path.to_string_lossy().to_string();
+
+    if claude_json_path.exists() {
+        let content = std::fs::read_to_string(&claude_json_path)
+            .map_err(|e| format!("Failed to read .claude.json: {}", e))?;
+
+        let json_content: Value = serde_json::from_str(&content)
+            .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+
+        Ok(ClaudeConfigFile {
+            path: path_str,
+            content: json_content,
+            exists: true,
+        })
+    } else {
+        Ok(ClaudeConfigFile {
+            path: path_str,
+            content: Value::Object(serde_json::Map::new()),
+            exists: false,
+        })
+    }
+}
+
+#[tauri::command]
+pub async fn write_claude_config_file(content: Value) -> Result<(), String> {
+    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+    let claude_json_path = home_dir.join(".claude.json");
+
+    let json_content = serde_json::to_string_pretty(&content)
+        .map_err(|e| format!("Failed to serialize JSON: {}", e))?;
+
+    std::fs::write(&claude_json_path, json_content)
+        .map_err(|e| format!("Failed to write file: {}", e))?;
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn track(event: String, properties: serde_json::Value, app: tauri::AppHandle) -> Result<(), String> {
     println!("📊 Tracking event: {}", event);

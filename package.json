@@ -10,8 +10,10 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@codemirror/fold": "^0.19.4",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lang-markdown": "^6.4.0",
+    "@codemirror/language": "^6.11.3",
     "@codemirror/language-data": "^6.5.1",
     "@hookform/resolvers": "^5.2.2",
     "@lobehub/icons": "^2.38.0",

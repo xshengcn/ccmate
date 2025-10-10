@@ -1,80 +1,132 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useClaudeProjects } from "../../lib/query";
+import { useClaudeProjects, useClaudeConfigFile, useWriteClaudeConfigFile } from "../../lib/query";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
-import { ArrowLeftIcon, FolderIcon, FileJsonIcon } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { ScrollArea } from "../../components/ui/scroll-area";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
+import { ArrowLeftIcon, FolderIcon, SaveIcon } from "lucide-react";
 import { toast } from "sonner";
+import CodeMirror, { EditorView, keymap } from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { vscodeLight } from '@uiw/codemirror-theme-vscode';
+import { codeFolding } from '@codemirror/language';
+import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function Detail() {
+  const { t } = useTranslation();
   const { path } = useParams<{ path: string }>();
   const navigate = useNavigate();
-  const { data: projects, isLoading, error } = useClaudeProjects();
+  const { data: projects, isLoading: isLoadingProjects, error: projectsError } = useClaudeProjects();
+  const { data: claudeConfig, isLoading: isLoadingConfig, error: configError } = useClaudeConfigFile();
+  const writeClaudeConfig = useWriteClaudeConfigFile();
+  const [jsonContent, setJsonContent] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
 
-  if (isLoading) {
+  // Update JSON content when project data loads
+  useEffect(() => {
+    if (path && projects && !hasChanges && !isLoadingProjects && !isLoadingConfig) {
+      const decodedPath = decodeURIComponent(path);
+      const project = projects.find(p => p.path === decodedPath);
+
+      if (project) {
+        setJsonContent(JSON.stringify(project.config, null, 2));
+      }
+    }
+  }, [path, projects, hasChanges, isLoadingProjects, isLoadingConfig]);
+
+  const handleSave = useCallback(() => {
+    try {
+      const parsedContent = JSON.parse(jsonContent);
+
+      if (!path || !claudeConfig) {
+        toast.error(t('projects.detail.noProjectSelected'));
+        return;
+      }
+
+      const decodedPath = decodeURIComponent(path);
+      const updatedConfig = JSON.parse(JSON.stringify(claudeConfig.content));
+
+      // Update the specific project in the projects object
+      if (!updatedConfig.projects) {
+        updatedConfig.projects = {};
+      }
+      updatedConfig.projects[decodedPath] = parsedContent;
+
+      writeClaudeConfig.mutate(updatedConfig);
+      setHasChanges(false);
+    } catch (error) {
+      toast.error(t('projects.detail.invalidJson'));
+    }
+  }, [jsonContent, path, claudeConfig, writeClaudeConfig, t]);
+
+  const handleContentChange = useCallback((value: string) => {
+    setJsonContent(value);
+    setHasChanges(true);
+  }, []);
+
+  const handleProjectChange = useCallback((newPath: string) => {
+    if (hasChanges) {
+      // Check if user wants to save before switching
+      const shouldSave = window.confirm(t('projects.detail.unsavedChanges'));
+      if (shouldSave) {
+        handleSave();
+      }
+    }
+    navigate(`/projects/${encodeURIComponent(newPath)}`);
+  }, [hasChanges, handleSave, navigate, t]);
+
+  // Create save keymap for CodeMirror
+  const saveKeymap = keymap.of([
+    {
+      key: "Mod-s",
+      run: () => {
+        handleSave();
+        return true; // Prevent further handling
+      }
+    }
+  ]);
+
+  // Create word wrap extension
+  const wordWrapExtension = EditorView.lineWrapping;
+
+  if (isLoadingConfig || isLoadingProjects) {
     return (
       <div className="">
         <div className="flex items-center p-3 border-b px-3 justify-between sticky top-0 bg-background z-10 mb-4" data-tauri-drag-region>
           <div data-tauri-drag-region>
-            <h3 className="font-bold" data-tauri-drag-region>Project Details</h3>
+            <h3 className="font-bold" data-tauri-drag-region>{t('projects.detail.editor')}</h3>
           </div>
         </div>
         <div className="space-y-6 px-4">
           <div className="flex items-center justify-center py-8">
-            <div className="text-sm text-muted-foreground">Loading project...</div>
+            <div className="text-sm text-muted-foreground">{t('projects.detail.loading')}</div>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (configError || projectsError) {
     return (
-      <div className="">
-        <div className="flex items-center p-3 border-b px-3 justify-between sticky top-0 bg-background z-10 mb-4" data-tauri-drag-region>
-          <div data-tauri-drag-region>
-            <h3 className="font-bold" data-tauri-drag-region>Project Details</h3>
-          </div>
-        </div>
+      <div className="w-full h-full flex items-center justify-center">
         <div className="space-y-6 px-4">
-          <Alert>
-            <AlertDescription>
-              Failed to load project: {error instanceof Error ? error.message : String(error)}
-            </AlertDescription>
-          </Alert>
+          {t('projects.detail.loadError')} {(configError || projectsError) instanceof Error ? (configError || projectsError)?.message : String(configError || projectsError)}
         </div>
-      </div>
+      </div >
     );
   }
 
   if (!path || !projects || projects.length === 0) {
     return (
-      <div className="">
-        <div className="flex items-center p-3 border-b px-3 justify-between sticky top-0 bg-background z-10 mb-4" data-tauri-drag-region>
-          <div data-tauri-drag-region>
-            <h3 className="font-bold" data-tauri-drag-region>Project Details</h3>
-          </div>
-        </div>
+      <div className="w-full h-full flex items-center justify-center">
         <div className="space-y-6 px-4">
-          <Alert>
-            <AlertDescription>
-              Project not found or no projects available.
-            </AlertDescription>
-          </Alert>
-          <Button onClick={() => navigate("/projects")} variant="outline">
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Projects
-          </Button>
+          {t('projects.detail.noProjectsMessage')}
         </div>
       </div>
     );
   }
 
-  // Decode the URL-encoded path
   const decodedPath = decodeURIComponent(path);
-
-  // Find the project with matching path
   const project = projects.find(p => p.path === decodedPath);
 
   if (!project) {
@@ -82,150 +134,89 @@ export function Detail() {
       <div className="">
         <div className="flex items-center p-3 border-b px-3 justify-between sticky top-0 bg-background z-10 mb-4" data-tauri-drag-region>
           <div data-tauri-drag-region>
-            <h3 className="font-bold" data-tauri-drag-region>Project Details</h3>
+            <h3 className="font-bold" data-tauri-drag-region>{t('projects.detail.editor')}</h3>
           </div>
         </div>
         <div className="space-y-6 px-4">
           <Alert>
             <AlertDescription>
-              Project with path "{decodedPath}" not found.
+              {t('projects.detail.projectNotFound', { path: decodedPath })}
             </AlertDescription>
           </Alert>
           <Button onClick={() => navigate("/projects")} variant="outline">
             <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Projects
+            {t('projects.detail.backToProjects')}
           </Button>
         </div>
       </div>
     );
   }
 
-  const handleCopyPath = () => {
-    navigator.clipboard.writeText(project.path).then(() => {
-      toast.success("Project path copied to clipboard");
-    }).catch(() => {
-      toast.error("Failed to copy project path");
-    });
-  };
-
-  const handleCopyConfig = () => {
-    navigator.clipboard.writeText(JSON.stringify(project.config, null, 2)).then(() => {
-      toast.success("Project configuration copied to clipboard");
-    }).catch(() => {
-      toast.error("Failed to copy project configuration");
-    });
-  };
-
   return (
-    <div className="">
-      <div className="flex items-center p-3 border-b px-3 justify-between sticky top-0 bg-background z-10 mb-4" data-tauri-drag-region>
-        <div className="flex items-center gap-3" data-tauri-drag-region>
+    <div className="flex flex-col h-screen">
+      <div className="flex items-center px-4 justify-between py-3 border-b" data-tauri-drag-region>
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium text-sm text-muted-foreground">{t('projects.detail.projectEditor')}</h3>
+          <span className="text-muted-foreground text-xs">/</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm" className="">
+                {project.path}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {projects.map((proj) => (
+                <DropdownMenuItem
+                  key={proj.path}
+                  onClick={() => handleProjectChange(proj.path)}
+                >
+                  <FolderIcon />
+                  {proj.path}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="flex items-center gap-2">
           <Button
-            onClick={() => navigate("/projects")}
-            variant="ghost"
+            onClick={handleSave}
+            disabled={!hasChanges || writeClaudeConfig.isPending}
             size="sm"
-            className="p-1"
+            className="flex items-center gap-2"
           >
-            <ArrowLeftIcon className="h-4 w-4" />
+            <SaveIcon className="h-4 w-4" />
+            {writeClaudeConfig.isPending ? t('projects.detail.saving') : t('projects.detail.save')}
           </Button>
-          <div data-tauri-drag-region>
-            <h3 className="font-bold" data-tauri-drag-region>Project Details</h3>
-          </div>
         </div>
       </div>
 
-      <div className="space-y-6 px-4">
-        {/* Project Info Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FolderIcon className="h-5 w-5" />
-              Project Information
-            </CardTitle>
-            <CardDescription>
-              Details about this Claude project
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="text-sm font-medium mb-2">Project Path</h4>
-              <div className="flex items-center gap-2">
-                <code className="bg-muted px-2 py-1 rounded text-sm flex-1 truncate">
-                  {project.path}
-                </code>
-                <Button onClick={handleCopyPath} variant="outline" size="sm">
-                  Copy
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Project Configuration Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileJsonIcon className="h-5 w-5" />
-              Project Configuration
-            </CardTitle>
-            <CardDescription>
-              The configuration settings for this project
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">JSON Configuration</h4>
-                <Button onClick={handleCopyConfig} variant="outline" size="sm">
-                  Copy JSON
-                </Button>
-              </div>
-              <ScrollArea className="h-[400px] w-full rounded-md border">
-                <pre className="p-4 text-xs overflow-x-auto">
-                  <code>{JSON.stringify(project.config, null, 2)}</code>
-                </pre>
-              </ScrollArea>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Other Projects */}
-        {projects.length > 1 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Other Projects</CardTitle>
-              <CardDescription>
-                Navigate to other configured projects
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {projects
-                  .filter(p => p.path !== project.path)
-                  .map((otherProject) => (
-                    <Button
-                      key={otherProject.path}
-                      onClick={() => {
-                        const encodedPath = encodeURIComponent(otherProject.path);
-                        navigate(`/projects/${encodedPath}`);
-                      }}
-                      variant="ghost"
-                      className="w-full justify-start text-left h-auto p-3"
-                    >
-                      <div className="flex flex-col items-start">
-                        <div className="font-medium text-sm truncate max-w-full">
-                          {otherProject.path}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {Object.keys(otherProject.config || {}).length} configuration properties
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+      <div className="flex-1 overflow-hidden">
+        <div className="overflow-hidden  h-full">
+          <CodeMirror
+            value={jsonContent}
+            height="100%"
+            theme={vscodeLight}
+            extensions={[json(), codeFolding(), wordWrapExtension, saveKeymap]}
+            onChange={handleContentChange}
+            basicSetup={{
+              lineNumbers: true,
+              highlightActiveLineGutter: true,
+              foldGutter: true,
+              dropCursor: false,
+              allowMultipleSelections: false,
+              indentOnInput: true,
+              bracketMatching: true,
+              closeBrackets: true,
+              autocompletion: true,
+              highlightActiveLine: true,
+              highlightSelectionMatches: true,
+              searchKeymap: true,
+            }}
+            className="h-full text-sm"
+            style={{ width: '100%', fontSize: '12px' }}
+          />
+        </div>
       </div>
     </div>
   );

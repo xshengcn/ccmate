@@ -163,6 +163,8 @@ pub fn run() {
             delete_global_mcp_server,
             check_mcp_server_exists,
             read_claude_projects,
+            read_claude_config_file,
+            write_claude_config_file,
             check_for_updates,
             install_and_restart,
             rebuild_tray_menu_command,

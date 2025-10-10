@@ -9,6 +9,7 @@ import { UsagePage } from "./pages/UsagePage";
 import { MemoryPage } from "./pages/MemoryPage";
 import { List } from "./pages/projects/List";
 import { Detail } from "./pages/projects/Detail";
+import { ProjectsLayout } from "./pages/projects/Layout";
 
 const router = createBrowserRouter([
   {
@@ -71,17 +72,27 @@ const router = createBrowserRouter([
         path: "projects",
         element: (
           <RouteWrapper>
-            <List />
+            <ProjectsLayout />
           </RouteWrapper>
         ),
-      },
-      {
-        path: "projects/:path",
-        element: (
-          <RouteWrapper>
-            <Detail />
-          </RouteWrapper>
-        ),
+        children: [
+          {
+            index: true,
+            element: (
+              <RouteWrapper>
+                <List />
+              </RouteWrapper>
+            ),
+          },
+          {
+            path: ":path",
+            element: (
+              <RouteWrapper>
+                <Detail />
+              </RouteWrapper>
+            ),
+          },
+        ],
       },
     ],
   },

@@ -1,6 +1,7 @@
 {
   "app.title": "CC Mate",
   "navigation.configurations": "Config files",
+  "navigation.projects": "Projects",
   "navigation.mcp": "MCP",
   "navigation.usage": "Usage",
   "navigation.settings": "Settings",
@@ -112,5 +113,18 @@
   "memory.title": "Memory",
   "memory.description": "Manage Claude Code global memory",
   "memory.save": "Save",
-  "memory.saving": "Saving..."
+  "memory.saving": "Saving...",
+  "projects.title": "Projects",
+  "projects.detail.editor": "Project Configuration Editor",
+  "projects.detail.projectEditor": "Project Editor",
+  "projects.detail.loading": "Loading project configuration...",
+  "projects.detail.loadError": "Failed to load configuration:",
+  "projects.detail.noProjectSelected": "No project selected or configuration not loaded",
+  "projects.detail.invalidJson": "Invalid JSON format. Please fix the errors before saving.",
+  "projects.detail.unsavedChanges": "You have unsaved changes. Do you want to save before switching projects?",
+  "projects.detail.projectNotFound": "Project with path \"{{path}}\" not found.",
+  "projects.detail.backToProjects": "Back to Projects",
+  "projects.detail.save": "Save",
+  "projects.detail.saving": "Saving...",
+  "projects.detail.noProjectsMessage": "No open Claude Code projects. Projects will automatically appear here after running the `claude` command in a project."
 }

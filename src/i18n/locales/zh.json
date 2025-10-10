@@ -1,6 +1,7 @@
 {
   "app.title": "CC Mate",
   "navigation.configurations": "配置文件",
+  "navigation.projects": "项目",
   "navigation.mcp": "MCP",
   "navigation.usage": "用量",
   "navigation.settings": "设置",
@@ -111,5 +112,18 @@
   "memory.title": "记忆",
   "memory.description": "管理 Claude Code 全局记忆",
   "memory.save": "保存",
-  "memory.saving": "保存中..."
+  "memory.saving": "保存中...",
+  "projects.title": "项目",
+  "projects.detail.editor": "项目配置编辑器",
+  "projects.detail.projectEditor": "项目编辑器",
+  "projects.detail.loading": "加载项目配置中...",
+  "projects.detail.loadError": "加载配置失败：",
+  "projects.detail.noProjectSelected": "未选择项目或配置未加载",
+  "projects.detail.invalidJson": "JSON 格式无效。请在保存前修复错误。",
+  "projects.detail.unsavedChanges": "您有未保存的更改。要在切换项目前保存吗？",
+  "projects.detail.projectNotFound": "未找到路径为 \"{{path}}\" 的项目。",
+  "projects.detail.backToProjects": "返回项目列表",
+  "projects.detail.save": "保存",
+  "projects.detail.saving": "保存中...",
+  "projects.detail.noProjectsMessage": "没有已打开的 Claude Code 项目。在项目中运行 `claude` 命令后，这个项目会自动出现在这里。"
 }

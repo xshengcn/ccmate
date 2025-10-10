@@ -1,5 +1,5 @@
 import React from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn, isMacOS } from "../lib/utils";
 import { FileJsonIcon, SettingsIcon, CpuIcon, ActivityIcon, BrainIcon, FolderIcon } from "lucide-react";
@@ -8,6 +8,8 @@ import { UpdateButton } from "./UpdateButton";
 
 export function Layout() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const isProjectsRoute = location.pathname.startsWith('/projects');
 
   const navLinks = [
     {
@@ -18,7 +20,7 @@ export function Layout() {
     {
       to: "/projects",
       icon: FolderIcon,
-      label: "Projects"
+      label: t("navigation.projects")
     },
     {
       to: "/mcp",
@@ -91,11 +93,17 @@ export function Layout() {
             </div>
           </div>
         </nav>
-        <ScrollArea className="flex-1 h-screen [&>div>div]:!block">
-          <main className="" data-tauri-drag-region>
+        {isProjectsRoute ? (
+          <main className="flex-1 h-screen overflow-hidden" data-tauri-drag-region>
             <Outlet />
           </main>
-        </ScrollArea>
+        ) : (
+          <ScrollArea className="flex-1 h-screen [&>div>div]:!block">
+            <main className="" data-tauri-drag-region>
+              <Outlet />
+            </main>
+          </ScrollArea>
+        )}
       </div>
     </div>
   );

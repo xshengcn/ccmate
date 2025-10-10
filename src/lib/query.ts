@@ -379,6 +379,36 @@ export const useClaudeProjects = () => {
   });
 };
 
+export interface ClaudeConfigFile {
+  path: string;
+  content: unknown;
+  exists: boolean;
+}
+
+export const useClaudeConfigFile = () => {
+  return useQuery({
+    queryKey: ["claude-config-file"],
+    queryFn: () => invoke<ClaudeConfigFile>("read_claude_config_file"),
+  });
+};
+
+export const useWriteClaudeConfigFile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (content: unknown) => invoke<void>("write_claude_config_file", { content }),
+    onSuccess: () => {
+      toast.success("Claude configuration saved successfully");
+      queryClient.invalidateQueries({ queryKey: ["claude-config-file"] });
+      queryClient.invalidateQueries({ queryKey: ["claude-projects"] });
+    },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to save Claude configuration: ${errorMessage}`);
+    },
+  });
+};
+
 // Helper function to rebuild tray menu
 const rebuildTrayMenu = async () => {
   try {
