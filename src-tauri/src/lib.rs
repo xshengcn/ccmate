@@ -168,7 +168,8 @@ pub fn run() {
             unlock_cc_ext,
             read_project_usage_files,
             read_claude_memory,
-            write_claude_memory
+            write_claude_memory,
+            track
         ])
         .on_window_event(|window, event| {
             #[cfg(target_os = "macos")]

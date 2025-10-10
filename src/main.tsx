@@ -6,6 +6,9 @@ import { Toaster } from "./components/ui/sonner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import './i18n';
 import './tw.css'
+import { track } from "./lib/tracker";
+import { TrackEvent } from "./lib/tracker";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,6 +17,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+track(TrackEvent.AppLaunched);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

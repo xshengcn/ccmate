@@ -1,6 +1,8 @@
 use serde_json::Value;
 use std::path::PathBuf;
 use tauri_plugin_updater::UpdaterExt;
+use reqwest;
+use uuid::Uuid;
 
 // Application configuration directory
 const APP_CONFIG_DIR: &str = ".ccconfig";
@@ -80,6 +82,7 @@ pub struct McpServer {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct StoresData {
     pub configs: Vec<ConfigStore>,
+    pub distinct_id: Option<String>,
 }
 
 #[tauri::command]
@@ -290,6 +293,7 @@ pub async fn get_stores() -> Result<Vec<ConfigStore>, String> {
             // Create stores.json with the default store
             let stores_data = StoresData {
                 configs: vec![default_store.clone()],
+                distinct_id: None,
             };
 
             let json_content = serde_json::to_string_pretty(&stores_data)
@@ -341,7 +345,10 @@ pub async fn create_config(
         serde_json::from_str::<StoresData>(&content)
             .map_err(|e| format!("Failed to parse stores file: {}", e))?
     } else {
-        StoresData { configs: vec![] }
+        StoresData {
+            configs: vec![],
+            distinct_id: None,
+        }
     };
 
     // Determine if this should be the active store (true if no other stores exist)
@@ -1111,5 +1118,194 @@ pub async fn install_and_restart(app: tauri::AppHandle) -> Result<(), String> {
             println!("❌ Failed to get updater for installation: {}", e);
             Err(format!("Failed to get updater: {}", e))
         }
+    }
+}
+
+// Get or create distinct_id from stores.json
+async fn get_or_create_distinct_id() -> Result<String, String> {
+    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+    let app_config_path = home_dir.join(APP_CONFIG_DIR);
+    let stores_file = app_config_path.join("stores.json");
+
+    // Ensure app config directory exists
+    std::fs::create_dir_all(&app_config_path)
+        .map_err(|e| format!("Failed to create app config directory: {}", e))?;
+
+    // Read existing stores.json or create new one
+    let mut stores_data = if stores_file.exists() {
+        let content = std::fs::read_to_string(&stores_file)
+            .map_err(|e| format!("Failed to read stores file: {}", e))?;
+
+        serde_json::from_str::<StoresData>(&content)
+            .map_err(|e| format!("Failed to parse stores file: {}", e))?
+    } else {
+        StoresData {
+            configs: vec![],
+            distinct_id: None,
+        }
+    };
+
+    // Return existing distinct_id or create new one
+    if let Some(ref id) = stores_data.distinct_id {
+        Ok(id.clone())
+    } else {
+        // Generate new UUID
+        let new_id = Uuid::new_v4().to_string();
+        stores_data.distinct_id = Some(new_id.clone());
+
+        // Write back to stores.json
+        let json_content = serde_json::to_string_pretty(&stores_data)
+            .map_err(|e| format!("Failed to serialize stores data: {}", e))?;
+
+        std::fs::write(&stores_file, json_content)
+            .map_err(|e| format!("Failed to write stores file: {}", e))?;
+
+        println!("Created new distinct_id: {}", new_id);
+        Ok(new_id)
+    }
+}
+
+// Get operating system name in PostHog format
+fn get_os_name() -> &'static str {
+    #[cfg(target_os = "macos")]
+    return "macOS";
+    #[cfg(target_os = "windows")]
+    return "Windows";
+    #[cfg(target_os = "linux")]
+    return "Linux";
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+    return "Unknown";
+}
+
+// Get operating system version
+fn get_os_version() -> Result<String, String> {
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        let output = Command::new("sw_vers")
+            .arg("-productVersion")
+            .output()
+            .map_err(|e| format!("Failed to get macOS version: {}", e))?;
+
+        let version = String::from_utf8(output.stdout)
+            .map_err(|e| format!("Failed to parse macOS version: {}", e))?;
+
+        Ok(version.trim().to_string())
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        let output = Command::new("cmd")
+            .args(&["/C", "ver"])
+            .output()
+            .map_err(|e| format!("Failed to get Windows version: {}", e))?;
+
+        let version_str = String::from_utf8(output.stdout)
+            .map_err(|e| format!("Failed to parse Windows version: {}", e))?;
+
+        // Extract version number from "Microsoft Windows [Version 10.0.19045.2364]"
+        if let Some(start) = version_str.find("Version ") {
+            let version_part = &version_str[start + 8..];
+            let version = version_part.trim_end_matches("]").trim().to_string();
+            Ok(version)
+        } else {
+            Ok("Unknown".to_string())
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use std::fs;
+        // Try to read from /etc/os-release first
+        if let Ok(content) = fs::read_to_string("/etc/os-release") {
+            for line in content.lines() {
+                if line.starts_with("VERSION_ID=") {
+                    let version = line.split('=').nth(1)
+                        .unwrap_or("Unknown")
+                        .trim_matches('"');
+                    return Ok(version.to_string());
+                }
+            }
+        }
+
+        // Fallback to uname
+        use std::process::Command;
+        let output = Command::new("uname")
+            .arg("-r")
+            .output()
+            .map_err(|e| format!("Failed to get Linux kernel version: {}", e))?;
+
+        let version = String::from_utf8(output.stdout)
+            .map_err(|e| format!("Failed to parse Linux version: {}", e))?;
+
+        Ok(version.trim().to_string())
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+    Ok("Unknown".to_string())
+}
+
+#[tauri::command]
+pub async fn track(event: String, properties: serde_json::Value, app: tauri::AppHandle) -> Result<(), String> {
+    println!("📊 Tracking event: {}", event);
+
+    // Get distinct_id
+    let distinct_id = get_or_create_distinct_id().await?;
+
+    // Get app version
+    let app_version = app.package_info().version.to_string();
+
+    // Get OS information
+    let os_name = get_os_name();
+    let os_version = get_os_version().unwrap_or_else(|_| "Unknown".to_string());
+
+    // Prepare request payload
+    let mut payload = serde_json::json!({
+        "api_key": "phc_zlfJLeYsreOvash1EhL6IO6tnP00exm75OT50SjnNcy",
+        "event": event,
+        "properties": {
+            "distinct_id": distinct_id,
+            "app_version": app_version,
+            "$os": os_name,
+            "$os_version": os_version
+        }
+    });
+
+    // Merge additional properties
+    if let Some(props_obj) = payload["properties"].as_object_mut() {
+        if let Some(additional_props) = properties.as_object() {
+            for (key, value) in additional_props {
+                props_obj.insert(key.clone(), value.clone());
+            }
+        }
+    }
+
+    // Add timestamp if not provided
+    if !payload["properties"].as_object().unwrap().contains_key("timestamp") {
+        let timestamp = chrono::Utc::now().to_rfc3339();
+        payload["properties"]["timestamp"] = serde_json::Value::String(timestamp);
+    }
+
+    println!("📤 Sending to PostHog: {}", serde_json::to_string_pretty(&payload).unwrap());
+
+    // Send request to PostHog
+    let client = reqwest::Client::new();
+    let response = client
+        .post("https://us.i.posthog.com/capture/")
+        .header("Content-Type", "application/json")
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to send request to PostHog: {}", e))?;
+
+    if response.status().is_success() {
+        println!("✅ Event tracked successfully");
+        Ok(())
+    } else {
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        println!("❌ Failed to track event: {} - {}", status, error_text);
+        Err(format!("PostHog API error: {} - {}", status, error_text))
     }
 }
