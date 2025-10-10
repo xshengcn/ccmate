@@ -10,6 +10,7 @@ import { MemoryPage } from "./pages/MemoryPage";
 import { List } from "./pages/projects/List";
 import { Detail } from "./pages/projects/Detail";
 import { ProjectsLayout } from "./pages/projects/Layout";
+import { NotificationPage } from "./pages/NotificationPage";
 
 const router = createBrowserRouter([
   {
@@ -65,6 +66,14 @@ const router = createBrowserRouter([
         element: (
           <RouteWrapper>
             <MemoryPage />
+          </RouteWrapper>
+        ),
+      },
+      {
+        path: "notification",
+        element: (
+          <RouteWrapper>
+            <NotificationPage />
           </RouteWrapper>
         ),
       },

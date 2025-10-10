@@ -211,8 +211,10 @@ pub fn run() {
             write_claude_memory,
             track,
             get_notification_settings,
+            update_notification_settings,
             add_claude_code_hook,
-            remove_claude_code_hook
+            remove_claude_code_hook,
+            send_test_notification
         ])
         .on_window_event(|window, event| {
             #[cfg(target_os = "macos")]

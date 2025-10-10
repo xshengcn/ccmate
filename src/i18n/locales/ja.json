@@ -109,6 +109,7 @@
   "usageChart.startOfMonth": "今月の開始",
   "usageChart.allTime": "全期間",
   "navigation.memory": "メモリ",
+  "navigation.notifications": "通知",
   "memory.title": "メモリ",
   "memory.description": "Claude Code グローバルメモリを管理",
   "memory.save": "保存",

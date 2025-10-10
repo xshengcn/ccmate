@@ -303,7 +303,7 @@ pub async fn get_stores() -> Result<Vec<ConfigStore>, String> {
                 distinct_id: None,
                 notification: Some(NotificationSettings {
                     enable: true,
-                    enabled_hooks: vec!["Stop".to_string(), "PreToolUse".to_string(), "Notification".to_string()],
+                    enabled_hooks: vec!["Notification".to_string()],
                 }),
             };
 
@@ -331,7 +331,7 @@ pub async fn get_stores() -> Result<Vec<ConfigStore>, String> {
     if stores_data.notification.is_none() {
         stores_data.notification = Some(NotificationSettings {
             enable: true,
-            enabled_hooks: vec!["Stop".to_string(), "PreToolUse".to_string(), "Notification".to_string()],
+            enabled_hooks: vec!["Notification".to_string()],
         });
 
         // Write back to stores file with notification settings added
@@ -378,7 +378,7 @@ pub async fn create_config(
             distinct_id: None,
             notification: Some(NotificationSettings {
                 enable: true,
-                enabled_hooks: vec!["Stop".to_string(), "PreToolUse".to_string(), "Notification".to_string()],
+                enabled_hooks: vec!["Notification".to_string()],
             }),
         }
     };
@@ -1176,7 +1176,7 @@ async fn get_or_create_distinct_id() -> Result<String, String> {
             distinct_id: None,
             notification: Some(NotificationSettings {
                 enable: true,
-                enabled_hooks: vec!["Stop".to_string(), "PreToolUse".to_string(), "Notification".to_string()],
+                enabled_hooks: vec!["Notification".to_string()],
             }),
         }
     };
@@ -1598,5 +1598,78 @@ pub async fn remove_claude_code_hook() -> Result<(), String> {
         .map_err(|e| format!("Failed to write settings.json: {}", e))?;
 
     println!("✅ Claude Code hooks removed successfully");
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_notification_settings(settings: NotificationSettings) -> Result<(), String> {
+    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+    let app_config_path = home_dir.join(APP_CONFIG_DIR);
+    let stores_file = app_config_path.join("stores.json");
+
+    if !stores_file.exists() {
+        // Create stores.json with notification settings if it doesn't exist
+        let stores_data = StoresData {
+            configs: vec![],
+            distinct_id: None,
+            notification: Some(settings.clone()),
+        };
+
+        // Ensure app config directory exists
+        std::fs::create_dir_all(&app_config_path)
+            .map_err(|e| format!("Failed to create app config directory: {}", e))?;
+
+        let json_content = serde_json::to_string_pretty(&stores_data)
+            .map_err(|e| format!("Failed to serialize stores: {}", e))?;
+
+        std::fs::write(&stores_file, json_content)
+            .map_err(|e| format!("Failed to write stores file: {}", e))?;
+
+        println!("Created stores.json with notification settings");
+        return Ok(());
+    }
+
+    // Read existing stores
+    let content = std::fs::read_to_string(&stores_file)
+        .map_err(|e| format!("Failed to read stores file: {}", e))?;
+
+    let mut stores_data: StoresData = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse stores file: {}", e))?;
+
+    // Update notification settings
+    stores_data.notification = Some(settings);
+
+    // Write back to stores file
+    let json_content = serde_json::to_string_pretty(&stores_data)
+        .map_err(|e| format!("Failed to serialize stores: {}", e))?;
+
+    std::fs::write(&stores_file, json_content)
+        .map_err(|e| format!("Failed to write stores file: {}", e))?;
+
+    println!("✅ Notification settings updated successfully");
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn send_test_notification(hook_type: String, app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_notification::NotificationExt;
+
+    let title = "Claude Code";
+    let body = match hook_type.as_str() {
+        "general" => "Claude Code is waiting for your input",
+        "PreToolUse" => "🔨 Using test_tool",
+        "Stop" => "✅ Task completed successfully",
+        _ => "This is a test notification.",
+    };
+
+    // Send notification using the Tauri notification plugin
+    app.notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show()
+        .map_err(|e| format!("Failed to send notification: {}", e))?;
+
+    println!("✅ Test notification sent successfully for hook type: {}", hook_type);
     Ok(())
 }

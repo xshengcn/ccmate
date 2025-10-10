@@ -109,6 +109,7 @@
   "usageChart.startOfMonth": "Début du mois",
   "usageChart.allTime": "Toutes les périodes",
   "navigation.memory": "Mémoire",
+  "navigation.notifications": "Notifications",
   "memory.title": "Mémoire",
   "memory.description": "Gérer la mémoire globale de Claude Code",
   "memory.save": "Sauvegarder",

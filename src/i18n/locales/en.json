@@ -110,6 +110,7 @@
   "usageChart.startOfMonth": "Start of this month",
   "usageChart.allTime": "All time",
   "navigation.memory": "Memory",
+  "navigation.notifications": "Notifications",
   "memory.title": "Memory",
   "memory.description": "Manage Claude Code global memory",
   "memory.save": "Save",
@@ -126,5 +127,13 @@
   "projects.detail.backToProjects": "Back to Projects",
   "projects.detail.save": "Save",
   "projects.detail.saving": "Saving...",
-  "projects.detail.noProjectsMessage": "No open Claude Code projects. Projects will automatically appear here after running the `claude` command in a project."
+  "projects.detail.noProjectsMessage": "No open Claude Code projects. Projects will automatically appear here after running the `claude` command in a project.",
+  "notifications.title": "Notifications",
+  "notifications.description": "Receive notifications from Claude Code",
+  "notifications.general": "General Notifications",
+  "notifications.generalDescription": "Notify when Claude Code sends notifications",
+  "notifications.toolUse": "Tool Use Notifications",
+  "notifications.toolUseDescription": "Notify when Claude Code is using tools",
+  "notifications.completion": "Completion Notifications",
+  "notifications.completionDescription": "Notify when Claude Code completes tasks"
 }

@@ -38,6 +38,11 @@ export interface McpServer {
   config: Record<string, any>;
 }
 
+export interface NotificationSettings {
+  enable: boolean;
+  enabled_hooks: string[];
+}
+
 export const useConfigFiles = () => {
   return useQuery({
     queryKey: ["config-files"],
@@ -405,6 +410,54 @@ export const useWriteClaudeConfigFile = () => {
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
       toast.error(`Failed to save Claude configuration: ${errorMessage}`);
+    },
+  });
+};
+
+// Notification settings hooks
+
+export const useNotificationSettings = () => {
+  return useQuery({
+    queryKey: ["notification-settings"],
+    queryFn: () => invoke<NotificationSettings | null>("get_notification_settings"),
+  });
+};
+
+export const useUpdateNotificationSettings = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (settings: NotificationSettings) => {
+      return invoke<void>("update_notification_settings", { settings });
+    },
+    onSuccess: () => {
+      toast.success("Notification settings updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["notification-settings"] });
+    },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to update notification settings: ${errorMessage}`);
+    },
+  });
+};
+
+export const useSendTestNotification = () => {
+  return useMutation({
+    mutationFn: (hookType: string) => {
+      return invoke<void>("send_test_notification", { hookType });
+    },
+    onSuccess: (_, hookType) => {
+      const hookTypeMap: Record<string, string> = {
+        general: "一般通知",
+        PreToolUse: "工具使用通知",
+        Stop: "完成通知",
+      };
+      const hookTypeName = hookTypeMap[hookType] || hookType;
+      toast.success(`${hookTypeName}测试通知已发送`);
+    },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`发送测试通知失败: ${errorMessage}`);
     },
   });
 };

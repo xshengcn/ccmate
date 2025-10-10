@@ -60,8 +60,19 @@ async fn handle_hook_event(Json(payload): Json<HookEvent>, app_handle: Arc<tauri
     println!("📥 Received hook event: {}", payload.hook_event_name);
     println!("📄 Hook data: {}", serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "Failed to serialize".to_string()));
 
-    // Send notification based on the hook event
-    send_hook_notification(&payload, &app_handle).await;
+    // Check notification settings before sending notification
+    if let Ok(Some(settings)) = crate::commands::get_notification_settings().await {
+        if settings.enable && settings.enabled_hooks.contains(&payload.hook_event_name) {
+            // Send notification based on the hook event
+            send_hook_notification(&payload, &app_handle).await;
+        } else {
+            println!("🔕 Hook '{}' is not enabled in notification settings, skipping notification", payload.hook_event_name);
+        }
+    } else {
+        println!("⚠️ Could not get notification settings, defaulting to sending notification");
+        // Send notification based on the hook event (fallback behavior)
+        send_hook_notification(&payload, &app_handle).await;
+    }
 
     (StatusCode::OK, "Hook received")
 }
@@ -82,7 +93,7 @@ async fn send_hook_notification(event: &HookEvent, app_handle: &tauri::AppHandle
         }
         "Notification" => {
             if let Some(message) = event.extra.get("message").and_then(|v| v.as_str()) {
-                message.to_string()
+                format!("✅ {}", message)
             } else {
                 "Received notification".to_string()
             }

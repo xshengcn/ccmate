@@ -109,6 +109,7 @@
   "usageChart.startOfMonth": "本月开始",
   "usageChart.allTime": "全部时间",
   "navigation.memory": "记忆",
+  "navigation.notifications": "通知",
   "memory.title": "记忆",
   "memory.description": "管理 Claude Code 全局记忆",
   "memory.save": "保存",
@@ -125,5 +126,13 @@
   "projects.detail.backToProjects": "返回项目列表",
   "projects.detail.save": "保存",
   "projects.detail.saving": "保存中...",
-  "projects.detail.noProjectsMessage": "没有已打开的 Claude Code 项目。在项目中运行 `claude` 命令后，这个项目会自动出现在这里。"
+  "projects.detail.noProjectsMessage": "没有已打开的 Claude Code 项目。在项目中运行 `claude` 命令后，这个项目会自动出现在这里。",
+  "notifications.title": "通知",
+  "notifications.description": "接收 Claude Code 的通知",
+  "notifications.general": "一般通知",
+  "notifications.generalDescription": "当 Claude Code 发送通知时提醒",
+  "notifications.toolUse": "工具使用通知",
+  "notifications.toolUseDescription": "当 Claude Code 使用工具时提醒",
+  "notifications.completion": "完成时通知",
+  "notifications.completionDescription": "当 Claude Code 完成任务时提醒"
 }

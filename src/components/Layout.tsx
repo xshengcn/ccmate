@@ -2,7 +2,7 @@ import React from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn, isMacOS } from "../lib/utils";
-import { FileJsonIcon, SettingsIcon, CpuIcon, ActivityIcon, BrainIcon, FolderIcon } from "lucide-react";
+import { FileJsonIcon, SettingsIcon, CpuIcon, ActivityIcon, BrainIcon, FolderIcon, BellIcon } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { UpdateButton } from "./UpdateButton";
 
@@ -31,6 +31,11 @@ export function Layout() {
       to: "/memory",
       icon: BrainIcon,
       label: t("navigation.memory")
+    },
+    {
+      to: "/notification",
+      icon: BellIcon,
+      label: t("navigation.notifications")
     },
     {
       to: "/usage",
