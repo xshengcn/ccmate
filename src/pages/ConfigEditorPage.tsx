@@ -706,14 +706,14 @@ export function ConfigEditorPage() {
         <input
           {...register("configName")}
           type="text"
-          className="text-sm px-2 text-muted-foreground border rounded-sm w-[200px] h-7 bg-white"
+          className="text-sm px-2 text-muted-foreground border rounded-sm w-[200px] h-7 bg-background"
         />
       </section>
       <section className="space-y-8 pb-8">
         {fields.map((field) => (
           <div key={field.sectionName}>
             <h3 className="px-10 py-2 font-medium  text-muted-foreground text-sm">{field.sectionName}</h3>
-            <div className="mx-8 rounded-lg bg-zinc-100/60 p-3 space-y-5">
+            <div className="mx-8 rounded-lg bg-card p-3 space-y-5 border">
               {field.fields.map((field) => (
                 <div className="" key={field.name}>
                   <div className="flex gap-2 items-center justify-between">

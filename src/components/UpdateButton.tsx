@@ -22,7 +22,7 @@ export function UpdateButton() {
         <button
           onClick={() => installAndRestart.mutate()}
           disabled={installAndRestart.isPending}
-          className={cn("flex items-center justify-center text-sm gap-2  bg-zinc-100 hover:bg-zinc-200 rounded-md px-2 py-2 w-full",
+          className={cn("flex items-center justify-center text-sm gap-2 bg-secondary hover:bg-secondary/80 rounded-md px-2 py-2 w-full",
             {
               "opacity-50": installAndRestart.isPending,
             }

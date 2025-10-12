@@ -29,12 +29,12 @@ export function GLMBanner(props: {
   }
 
   return (
-    <div className={cn("bg-zinc-50 rounded-md p-2 border border-zinc-200 space-y-2", props.className)}>
-      <h3 className="text-zinc-800 text-sm font-medium flex items-center gap-2">在 Claude Code 中使用 GLM 4.6
+    <div className={cn("bg-card rounded-md p-2 border space-y-2", props.className)}>
+      <h3 className="text-card-foreground text-sm font-medium flex items-center gap-2">在 Claude Code 中使用 GLM 4.6
         <TooltipProvider>
           <Tooltip delayDuration={100}>
             <TooltipTrigger>
-              <CircleQuestionMarkIcon size={14} className="text-zinc-500" />
+              <CircleQuestionMarkIcon size={14} className="text-muted-foreground" />
             </TooltipTrigger>
             <TooltipContent className="w-[200px]">
               <p className="font-normal">「在公开基准与真实编程任务中，GLM-4.6 的代码能力对齐 Claude Sonnet 4，是国内已知的最好的 Coding 模型」 —— 智谱官方文档</p>
@@ -118,10 +118,10 @@ export function GLMDialog(props: {
         <div className="mt-4">
           <div className="space-y-3">
             <div>
-              <h2 className="text-zinc-800 text-sm font-medium flex items-center gap-2">
+              <h2 className="text-card-foreground text-sm font-medium flex items-center gap-2">
                 第 1 步：购买 GLM 编码畅玩套餐
               </h2>
-              <div className="space-y-2 bg-zinc-100 p-3 rounded-lg m-2">
+              <div className="space-y-2 bg-secondary p-3 rounded-lg m-2">
                 <Button onClick={_ => {
                   openUrl("https://www.bigmodel.cn/claude-code?ic=UP1VEQEATH")
                 }} size="sm" variant="outline" className="text-sm">
@@ -134,10 +134,10 @@ export function GLMDialog(props: {
             </div>
 
             <div>
-              <h2 className="text-zinc-800 text-sm font-medium flex items-center gap-2">
+              <h2 className="text-card-foreground text-sm font-medium flex items-center gap-2">
                 第 2 步：创建 API Key
               </h2>
-              <div className="space-y-2 bg-zinc-100 p-3 rounded-lg m-2">
+              <div className="space-y-2 bg-secondary p-3 rounded-lg m-2">
                 <Button onClick={_ => {
                   openUrl("https://bigmodel.cn/usercenter/proj-mgmt/apikeys")
                 }} size="sm" variant="outline" className="text-sm">
@@ -148,10 +148,10 @@ export function GLMDialog(props: {
             </div>
 
             <div>
-              <h2 className="text-zinc-800 text-sm font-medium flex items-center gap-2">
+              <h2 className="text-card-foreground text-sm font-medium flex items-center gap-2">
                 第 3 步：输入 API Key
               </h2>
-              <div className="space-y-2 bg-zinc-100 p-3 rounded-lg m-2">
+              <div className="space-y-2 bg-secondary p-3 rounded-lg m-2">
                 <Input
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}

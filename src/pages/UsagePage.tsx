@@ -47,13 +47,13 @@ export function UsagePage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-zinc-50 p-4 rounded-lg space-y-2">
+                <div key={i} className="bg-card p-4 rounded-lg space-y-2 border">
                   <div className="h-4  rounded animate-pulse"></div>
                   <div className="h-8 rounded animate-pulse"></div>
                 </div>
               ))}
             </div>
-            <div className="mt-6 bg-zinc-50 p-6 rounded-lg w-full min-w-0">
+            <div className="mt-6 bg-card p-6 rounded-lg w-full min-w-0 border">
               <div className="h-64 rounded animate-pulse"></div>
             </div>
           </div>
@@ -103,7 +103,7 @@ export function UsagePage() {
               </div> */}
             </div>
 
-            <div className=" bg-zinc-50 p-6 rounded-lg w-full min-w-0">
+            <div className=" bg-card p-6 rounded-lg w-full min-w-0 border">
               <TokenUsageChart data={usageData} onFilteredDataChange={setFilteredUsageData} />
             </div>
           </>

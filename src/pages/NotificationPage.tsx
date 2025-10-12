@@ -55,7 +55,7 @@ export function NotificationPage() {
             <Skeleton className="h-4 w-48" />
           </div>
         </div>
-        <div className="px-4 flex flex-col bg-zinc-50 mx-4 rounded-lg py-1 space-y-4">
+        <div className="px-4 flex flex-col bg-card mx-4 rounded-lg py-1 border space-y-4">
           <div className="border-b px-1 py-3">
             <div className="flex items-center justify-between">
               <Skeleton className="h-4 w-24" />
@@ -90,7 +90,7 @@ export function NotificationPage() {
           <p className="text-sm text-muted-foreground" data-tauri-drag-region>{t("notifications.description")}</p>
         </div>
       </div>
-      <div className="px-4 flex flex-col bg-zinc-50 mx-4 rounded-lg py-1">
+      <div className="px-4 flex flex-col bg-card mx-4 rounded-lg py-1 border">
         <div className="border-b px-1 py-3">
           <div className="flex items-center justify-between">
             <Label htmlFor="notification" className="">{t("notifications.general")}</Label>

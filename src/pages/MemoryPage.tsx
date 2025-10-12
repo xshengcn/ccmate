@@ -6,7 +6,7 @@ import { SaveIcon } from "lucide-react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { useClaudeMemory, useWriteClaudeMemory } from "@/lib/query";
-import { vscodeLight } from "@uiw/codemirror-theme-vscode";
+import { useCodeMirrorTheme } from "@/lib/use-codemirror-theme";
 
 function MemoryPageHeader({ onSave, saving }: { onSave: () => void; saving: boolean }) {
   const { t } = useTranslation();
@@ -62,6 +62,7 @@ function MemoryPageContent() {
   const { data: memoryData } = useClaudeMemory();
   const { mutate: saveMemory, isPending: saving } = useWriteClaudeMemory();
   const [content, setContent] = useState<string>("");
+  const codeMirrorTheme = useCodeMirrorTheme();
 
   // Update local content when memory data loads
   useEffect(() => {
@@ -107,7 +108,7 @@ function MemoryPageContent() {
             ]}
             placeholder="~/.claude/CLAUDE.md"
             onChange={(value) => setContent(value)}
-            theme={vscodeLight}
+            theme={codeMirrorTheme}
             basicSetup={{
               lineNumbers: false,
               highlightActiveLineGutter: true,

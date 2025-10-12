@@ -5,6 +5,7 @@ import { cn, isMacOS } from "../lib/utils";
 import { FileJsonIcon, SettingsIcon, CpuIcon, ActivityIcon, BrainIcon, FolderIcon, BellIcon } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { UpdateButton } from "./UpdateButton";
+import { ThemeToggle } from "./ui/theme-toggle";
 
 export function Layout() {
   const { t } = useTranslation();
@@ -62,7 +63,7 @@ export function Layout() {
       )}
 
       <div className="flex flex-1 overflow-hidden ">
-        <nav className="w-[200px] bg-zinc-50 border-r flex flex-col" data-tauri-drag-region >
+        <nav className="w-[200px] bg-background border-r flex flex-col" data-tauri-drag-region >
           {isMacOS && (
             <div
               data-tauri-drag-region
@@ -82,7 +83,7 @@ export function Layout() {
                         "flex items-center gap-2 px-3 py-2 rounded-xl cursor-default select-none ",
                         {
                           "bg-primary text-primary-foreground": isActive,
-                          "hover:bg-zinc-200": !isActive
+                          "hover:bg-accent hover:text-accent-foreground": !isActive
                         }
                       )
                     }
@@ -93,7 +94,10 @@ export function Layout() {
                 </li>
               ))}
             </ul>
-            <div className="">
+            <div className="space-y-2">
+              <div className="px-3">
+                <ThemeToggle />
+              </div>
               <UpdateButton />
             </div>
           </div>

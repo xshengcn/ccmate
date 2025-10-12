@@ -10,7 +10,7 @@ import { ask, message } from "@tauri-apps/plugin-dialog";
 import { match } from "ts-pattern";
 import CodeMirror from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
-import { vscodeLight } from "@uiw/codemirror-theme-vscode";
+import { useCodeMirrorTheme } from "@/lib/use-codemirror-theme";
 import { builtInMcpServers } from "@/lib/builtInMCP";
 
 
@@ -21,6 +21,7 @@ function MCPPageContent() {
   const deleteMcpServer = useDeleteGlobalMcpServer();
   const [serverConfigs, setServerConfigs] = useState<Record<string, string>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const codeMirrorTheme = useCodeMirrorTheme();
 
   const handleConfigChange = (serverName: string, configText: string) => {
     setServerConfigs(prev => ({
@@ -111,8 +112,8 @@ function MCPPageContent() {
         ) : (
           <Accordion type="multiple" className="">
             {serverEntries.map(([serverName, serverConfig]) => (
-              <AccordionItem key={serverName} value={serverName} className="bg-zinc-50">
-                <AccordionTrigger className="hover:no-underline px-4 py-2 bg-zinc-50 hover:bg-zinc-100  duration-150">
+              <AccordionItem key={serverName} value={serverName} className="bg-card">
+                <AccordionTrigger className="hover:no-underline px-4 py-2 bg-card hover:bg-accent  duration-150">
                   <div className="flex items-center gap-2">
                     <HammerIcon size={12} />
                     <span className="font-medium">{serverName}</span>
@@ -124,13 +125,13 @@ function MCPPageContent() {
                       <CodeMirror
                         value={serverConfigs[serverName] || formatConfigForDisplay(serverConfig)}
                         height="180px"
-                        theme={vscodeLight}
+                        theme={codeMirrorTheme}
                         extensions={[json()]}
                         onChange={(value) => handleConfigChange(serverName, value)}
                         placeholder="Enter MCP server configuration as JSON"
                       />
                     </div>
-                    <div className="flex justify-between  bg-zinc-50">
+                    <div className="flex justify-between  bg-card">
                       <Button
                         variant="outline"
                         onClick={() => handleSaveConfig(serverName)}
@@ -299,6 +300,7 @@ function CustomMCPPanel({ onClose }: { onClose?: () => void }) {
   const [customConfig, setCustomConfig] = useState("");
   const addMcpServer = useAddGlobalMcpServer();
   const { data: mcpServers } = useGlobalMcpServers();
+  const codeMirrorTheme = useCodeMirrorTheme();
 
   const handleAddCustomMcpServer = async () => {
     try {
@@ -380,7 +382,7 @@ function CustomMCPPanel({ onClose }: { onClose?: () => void }) {
             value={customConfig}
             onChange={(value) => setCustomConfig(value)}
             height="240px"
-            theme={vscodeLight}
+            theme={codeMirrorTheme}
             extensions={[json()]}
             placeholder={t('mcp.customPlaceholder')}
           />

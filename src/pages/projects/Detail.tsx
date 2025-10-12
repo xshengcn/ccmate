@@ -7,7 +7,7 @@ import { ArrowLeftIcon, FolderIcon, SaveIcon } from "lucide-react";
 import { toast } from "sonner";
 import CodeMirror, { EditorView, keymap } from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
-import { vscodeLight } from '@uiw/codemirror-theme-vscode';
+import { useCodeMirrorTheme } from "../../lib/use-codemirror-theme";
 import { codeFolding } from '@codemirror/language';
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,7 @@ export function Detail() {
   const writeClaudeConfig = useWriteClaudeConfigFile();
   const [jsonContent, setJsonContent] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
+  const codeMirrorTheme = useCodeMirrorTheme();
 
   // Update JSON content when project data loads
   useEffect(() => {
@@ -196,7 +197,7 @@ export function Detail() {
           <CodeMirror
             value={jsonContent}
             height="100%"
-            theme={vscodeLight}
+            theme={codeMirrorTheme}
             extensions={[json(), codeFolding(), wordWrapExtension, saveKeymap]}
             onChange={handleContentChange}
             basicSetup={{
