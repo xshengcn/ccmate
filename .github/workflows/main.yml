@@ -16,7 +16,7 @@ on:
         description: 'Release notes/body'
         required: false
         type: string
-        default: 'See the assets to download this version and install.'
+        default: 'small bugfix and improvement'
 
 # This is the example for publishing a Universal macOS app with a signing certificate.
 # On each push to the `release` branch it will create or update a GitHub release, build your app, and upload the artifacts to the release.

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { cn, isMacOS } from "../lib/utils";
 import { FileJsonIcon, SettingsIcon, CpuIcon, ActivityIcon, BrainIcon, FolderIcon, BellIcon, TerminalIcon } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
+import { UpdateButton } from "./UpdateButton";
 
 export function Layout() {
   const { t } = useTranslation();
@@ -98,6 +99,10 @@ export function Layout() {
                 </li>
               ))}
             </ul>
+
+            <div className="space-y-2">
+              <UpdateButton />
+            </div>
           </div>
         </nav>
         {isProjectsRoute ? (
