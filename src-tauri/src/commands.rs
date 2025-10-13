@@ -1748,29 +1748,7 @@ pub async fn update_notification_settings(settings: NotificationSettings) -> Res
     Ok(())
 }
 
-#[tauri::command]
-pub async fn send_test_notification(hook_type: String, app: tauri::AppHandle) -> Result<(), String> {
-    use tauri_plugin_notification::NotificationExt;
 
-    let title = "Claude Code";
-    let body = match hook_type.as_str() {
-        "general" => "Claude Code is waiting for your input",
-        "PreToolUse" => "🔨 Using test_tool",
-        "Stop" => "✅ Task completed successfully",
-        _ => "This is a test notification.",
-    };
-
-    // Send notification using the Tauri notification plugin
-    app.notification()
-        .builder()
-        .title(title)
-        .body(body)
-        .show()
-        .map_err(|e| format!("Failed to send notification: {}", e))?;
-
-    println!("✅ Test notification sent successfully for hook type: {}", hook_type);
-    Ok(())
-}
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct CommandFile {
