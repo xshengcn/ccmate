@@ -144,28 +144,12 @@ pub fn run() {
                 }
             });
 
-            // Check notification settings and auto-register hooks if enabled
+            // Always update hooks to ensure they have the latest command settings
             tauri::async_runtime::spawn(async move {
-                println!("Checking notification settings...");
-                match commands::get_notification_settings().await {
-                    Ok(Some(settings)) if settings.enable => {
-                        println!("Notifications are enabled, adding Claude Code hooks...");
-                        match commands::add_claude_code_hook().await {
-                            Ok(()) => println!("✅ Claude Code hooks auto-registered successfully"),
-                            Err(e) => eprintln!("Failed to auto-register Claude Code hooks: {}", e),
-                        }
-                    }
-                    Ok(Some(_)) => {
-                        println!("Notifications are disabled, skipping hook registration");
-                    }
-                    Ok(None) => {
-                        println!("No notification settings found, adding default hooks...");
-                        match commands::add_claude_code_hook().await {
-                            Ok(()) => println!("✅ Claude Code hooks auto-registered successfully"),
-                            Err(e) => eprintln!("Failed to auto-register Claude Code hooks: {}", e),
-                        }
-                    }
-                    Err(e) => eprintln!("Failed to get notification settings: {}", e),
+                println!("Updating Claude Code hooks to latest version...");
+                match commands::update_claude_code_hook().await {
+                    Ok(()) => println!("✅ Claude Code hooks updated/checked successfully"),
+                    Err(e) => eprintln!("Failed to update Claude Code hooks: {}", e),
                 }
             });
 
@@ -213,6 +197,7 @@ pub fn run() {
             get_notification_settings,
             update_notification_settings,
             add_claude_code_hook,
+            update_claude_code_hook,
             remove_claude_code_hook,
             read_claude_commands,
             write_claude_command,

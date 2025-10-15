@@ -1525,6 +1525,109 @@ pub async fn track(event: String, properties: serde_json::Value, app: tauri::App
 
 // Hook management functions
 
+/// Get the latest hook command based on the current operating system
+fn get_latest_hook_command() -> serde_json::Value {
+    if cfg!(target_os = "windows") {
+        serde_json::json!({
+            "__ccmate__": true,
+            "type": "command",
+            "command": "powershell -Command \"try { Invoke-RestMethod -Uri http://localhost:59948/claude_code/hooks -Method POST -ContentType 'application/json' -Body $input -ErrorAction Stop } catch { '' }\""
+        })
+    } else {
+        serde_json::json!({
+            "__ccmate__": true,
+            "type": "command",
+            "command": "curl -s -X POST http://localhost:59948/claude_code/hooks -H 'Content-Type: application/json' --data-binary @- 2>/dev/null || echo"
+        })
+    }
+}
+
+/// Update existing ccmate hooks for specified events (doesn't add new ones)
+fn update_existing_hooks(hooks_obj: &mut serde_json::Map<String, serde_json::Value>, events: &[&str]) -> Result<bool, String> {
+    let latest_hook_command = get_latest_hook_command();
+    let latest_command_str = latest_hook_command.get("command")
+        .and_then(|cmd| cmd.as_str())
+        .unwrap_or("");
+
+    let mut hook_updated = false;
+
+    for event in events {
+        if let Some(event_hooks) = hooks_obj.get_mut(*event).and_then(|h| h.as_array_mut()) {
+            // Find and update existing ccmate hooks only
+            for entry in event_hooks.iter_mut() {
+                if let Some(hooks_array) = entry.get_mut("hooks").and_then(|h| h.as_array_mut()) {
+                    for hook in hooks_array.iter_mut() {
+                        if hook.get("__ccmate__").is_some() {
+                            // Compare only the command string, not the entire JSON object
+                            if let Some(existing_command) = hook.get("command").and_then(|cmd| cmd.as_str()) {
+                                if existing_command != latest_command_str {
+                                    // Update only the command field, preserve other properties
+                                    hook["command"] = serde_json::Value::String(latest_command_str.to_string());
+                                    hook_updated = true;
+                                    println!("🔄 Updated {} hook command: {}", event, latest_command_str);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(hook_updated)
+}
+
+/// Update or add ccmate hooks for specified events
+fn update_or_add_hooks(hooks_obj: &mut serde_json::Map<String, serde_json::Value>, events: &[&str]) -> Result<bool, String> {
+    let latest_hook_command = get_latest_hook_command();
+    let mut hook_updated = false;
+
+    for event in events {
+        if let Some(event_hooks) = hooks_obj.get_mut(*event).and_then(|h| h.as_array_mut()) {
+            // Find and update existing ccmate hooks
+            for entry in event_hooks.iter_mut() {
+                if let Some(hooks_array) = entry.get_mut("hooks").and_then(|h| h.as_array_mut()) {
+                    for hook in hooks_array.iter_mut() {
+                        if hook.get("__ccmate__").is_some() {
+                            // Update the command to the latest version
+                            if hook.get("command") != latest_hook_command.get("command") {
+                                *hook = latest_hook_command.clone();
+                                hook_updated = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If no ccmate hooks found, add one
+            let ccmate_hook_exists = event_hooks.iter().any(|entry| {
+                if let Some(hooks_array) = entry.get("hooks").and_then(|h| h.as_array()) {
+                    hooks_array.iter().any(|hook| hook.get("__ccmate__").is_some())
+                } else {
+                    false
+                }
+            });
+
+            if !ccmate_hook_exists {
+                let ccmate_hook_entry = serde_json::json!({
+                    "hooks": [latest_hook_command.clone()]
+                });
+                event_hooks.push(ccmate_hook_entry);
+                hook_updated = true;
+            }
+        } else {
+            // Create event hooks array with ccmate hook
+            let ccmate_hook_entry = serde_json::json!({
+                "hooks": [latest_hook_command.clone()]
+            });
+            hooks_obj.insert(event.to_string(), serde_json::Value::Array(vec![ccmate_hook_entry]));
+            hook_updated = true;
+        }
+    }
+
+    Ok(hook_updated)
+}
+
 #[tauri::command]
 pub async fn get_notification_settings() -> Result<Option<NotificationSettings>, String> {
     let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
@@ -1542,6 +1645,58 @@ pub async fn get_notification_settings() -> Result<Option<NotificationSettings>,
         .map_err(|e| format!("Failed to parse stores file: {}", e))?;
 
     Ok(stores_data.notification)
+}
+
+#[tauri::command]
+pub async fn update_claude_code_hook() -> Result<(), String> {
+    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+    let settings_path = home_dir.join(".claude/settings.json");
+
+    if !settings_path.exists() {
+        // If settings file doesn't exist, just add the hooks
+        return add_claude_code_hook().await;
+    }
+
+    // Read existing settings
+    let content = std::fs::read_to_string(&settings_path)
+        .map_err(|e| format!("Failed to read settings.json: {}", e))?;
+
+    let mut settings: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse settings.json: {}", e))?;
+
+    // Ensure hooks object exists
+    let hooks_obj = settings
+        .as_object_mut()
+        .unwrap()
+        .entry("hooks".to_string())
+        .or_insert_with(|| serde_json::Value::Object(serde_json::Map::new()))
+        .as_object_mut()
+        .unwrap();
+
+    // Update existing hooks for Notification, Stop, and PreToolUse events (only update, don't add new ones)
+    let events = ["Notification", "Stop", "PreToolUse"];
+    let hook_updated = update_existing_hooks(hooks_obj, &events)?;
+
+    if hook_updated {
+        // Write back to settings file
+        let json_content = serde_json::to_string_pretty(&settings)
+            .map_err(|e| format!("Failed to serialize settings: {}", e))?;
+
+        // Create .claude directory if it doesn't exist
+        if let Some(parent) = settings_path.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| format!("Failed to create .claude directory: {}", e))?;
+        }
+
+        std::fs::write(&settings_path, json_content)
+            .map_err(|e| format!("Failed to write settings.json: {}", e))?;
+
+        println!("✅ Claude Code hooks updated successfully");
+    } else {
+        println!("ℹ️  Claude Code hooks are already up to date - no updates needed");
+    }
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -1568,50 +1723,9 @@ pub async fn add_claude_code_hook() -> Result<(), String> {
         .as_object_mut()
         .unwrap();
 
-    // Define the hook command based on OS
-    let hook_command = if cfg!(target_os = "windows") {
-        serde_json::json!({
-            "__ccmate__": true,
-            "type": "command",
-            "command": "try { Invoke-RestMethod -Uri http://localhost:59948/claude_code/hooks -Method POST -ContentType 'application/json' -Body $input -ErrorAction Stop } catch { '' }"
-        })
-    } else {
-        serde_json::json!({
-            "__ccmate__": true,
-            "type": "command",
-            "command": "curl -s -X POST http://localhost:59948/claude_code/hooks -H 'Content-Type: application/json' --data-binary @- 2>/dev/null || echo"
-        })
-    };
-
     // Add hooks for Notification, Stop, and PreToolUse events
     let events = ["Notification", "Stop", "PreToolUse"];
-
-    for event in events {
-        let event_hooks = hooks_obj
-            .entry(event.to_string())
-            .or_insert_with(|| serde_json::Value::Array(Vec::new()))
-            .as_array_mut()
-            .unwrap();
-
-        // Check if this specific hook already exists in any hooks array
-        let hook_exists = event_hooks.iter().any(|entry| {
-            if let Some(hooks_array) = entry.get("hooks").and_then(|h| h.as_array()) {
-                hooks_array.iter().any(|hook| {
-                    hook.get("__ccmate__").is_some()
-                })
-            } else {
-                false
-            }
-        });
-
-        if !hook_exists {
-            // Create the correct structure with nested hooks array
-            let ccmate_hook_entry = serde_json::json!({
-                "hooks": [hook_command]
-            });
-            event_hooks.push(ccmate_hook_entry);
-        }
-    }
+    update_or_add_hooks(hooks_obj, &events)?;
 
     // Write back to settings file
     let json_content = serde_json::to_string_pretty(&settings)
