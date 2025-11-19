@@ -26,7 +26,10 @@
       "Bash(jq:*)",
       "Bash(done)",
       "Bash(pnpm exec biome format:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(gh release edit:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
