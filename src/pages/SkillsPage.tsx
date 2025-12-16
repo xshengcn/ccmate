@@ -52,7 +52,6 @@ function SkillsPageContent() {
 
 	const renderSkillContent = (skill: any) => {
 		let displayContent = skill.content;
-		let hasFrontmatter = false;
 
 		// Check if content has YAML frontmatter
 		const contentLines = skill.content.split('\n');
@@ -61,7 +60,6 @@ function SkillsPageContent() {
 			if (secondDividerIndex !== -1) {
 				// Remove YAML frontmatter for display
 				displayContent = contentLines.slice(secondDividerIndex + 2).join('\n');
-				hasFrontmatter = true;
 			}
 		}
 
