@@ -1504,6 +1504,57 @@ pub async fn write_claude_config_file(content: Value) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn delete_claude_project(project_path: String) -> Result<(), String> {
+    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+    let claude_json_path = home_dir.join(".claude.json");
+
+    // Check if the file exists
+    if !claude_json_path.exists() {
+        return Err("Claude configuration file does not exist".to_string());
+    }
+
+    // Read the current content
+    let content = std::fs::read_to_string(&claude_json_path)
+        .map_err(|e| format!("Failed to read .claude.json: {}", e))?;
+
+    let mut json_value: Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse .claude.json: {}", e))?;
+
+    // Check if projects object exists
+    let projects = json_value.get_mut("projects")
+        .and_then(|projects| projects.as_object_mut())
+        .ok_or("No projects found in configuration".to_string())?;
+
+    // Check if the project exists
+    if !projects.contains_key(&project_path) {
+        return Err(format!("Project '{}' not found", project_path));
+    }
+
+    // Remove the project from configuration (only the config entry, not the actual project directory)
+    projects.remove(&project_path);
+
+    // Delete the Claude project data directory in .claude/projects/ (not the actual project path)
+    // Convert project path to directory name format (replace "/" with "-", add leading "-")
+    let project_dir_name = format!("-{}", project_path.trim_start_matches('/').replace('/', "-"));
+    let claude_projects_dir = home_dir.join(".claude").join("projects").join(project_dir_name);
+    if claude_projects_dir.exists() {
+        std::fs::remove_dir_all(&claude_projects_dir)
+            .map_err(|e| format!("Failed to delete Claude project data directory '{}': {}", claude_projects_dir.display(), e))?;
+        println!("🗑️  Deleted Claude project data directory: {}", claude_projects_dir.display());
+    }
+
+    // Write back the updated configuration
+    let json_content = serde_json::to_string_pretty(&json_value)
+        .map_err(|e| format!("Failed to serialize JSON: {}", e))?;
+
+    std::fs::write(&claude_json_path, json_content)
+        .map_err(|e| format!("Failed to write file: {}", e))?;
+
+    println!("🗑️  Deleted project configuration for: {}", project_path);
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn track(event: String, properties: serde_json::Value, app: tauri::AppHandle) -> Result<(), String> {
     println!("📊 Tracking event: {}", event);
 
@@ -2066,4 +2117,161 @@ pub async fn delete_claude_agent(agent_name: String) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+// Skills management functions
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct SkillFile {
+    pub name: String,
+    pub path: String,
+    pub content: String,
+    pub exists: bool,
+    pub metadata: Option<SkillMetadata>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct SkillMetadata {
+    pub name: String,
+    pub description: String,
+    pub allowed_tools: Option<Vec<String>>,
+}
+
+#[tauri::command]
+pub async fn read_claude_skills() -> Result<Vec<SkillFile>, String> {
+    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+    let skills_dir = home_dir.join(".claude/skills");
+
+    if !skills_dir.exists() {
+        return Ok(vec![]);
+    }
+
+    let mut skill_files = Vec::new();
+
+    // Read all directories in the skills directory
+    let entries = std::fs::read_dir(&skills_dir)
+        .map_err(|e| format!("Failed to read skills directory: {}", e))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+        let path = entry.path();
+
+        // Only process directories
+        if path.is_dir() {
+            let skill_name = path.file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("unknown")
+                .to_string();
+
+            let skill_file_path = path.join("SKILL.md");
+
+            if skill_file_path.exists() {
+                let content = std::fs::read_to_string(&skill_file_path)
+                    .map_err(|e| format!("Failed to read SKILL.md file {}: {}", skill_file_path.display(), e))?;
+
+                // Parse YAML frontmatter
+                let metadata = parse_skill_metadata(&content);
+
+                skill_files.push(SkillFile {
+                    name: skill_name,
+                    path: path.to_string_lossy().to_string(),
+                    content,
+                    exists: true,
+                    metadata,
+                });
+            }
+        }
+    }
+
+    // Sort skills alphabetically by name
+    skill_files.sort_by(|a, b| a.name.cmp(&b.name));
+
+    Ok(skill_files)
+}
+
+fn parse_skill_metadata(content: &str) -> Option<SkillMetadata> {
+    // Look for YAML frontmatter between --- markers
+    let lines: Vec<&str> = content.lines().collect();
+
+    if lines.len() < 3 || !lines[0].trim().is_empty() || lines[0] != "---" {
+        return None;
+    }
+
+    // Find the end of frontmatter
+    let end_index = lines.iter().position(|line| *line == "---")?;
+    if end_index == 1 {
+        return None; // Empty frontmatter
+    }
+
+    // Extract YAML content
+    let yaml_content = lines[1..end_index].join("\n");
+
+    // Parse YAML
+    let metadata: SkillMetadata = match serde_yaml::from_str(&yaml_content) {
+        Ok(meta) => meta,
+        Err(_) => return None,
+    };
+
+    Some(metadata)
+}
+
+#[tauri::command]
+pub async fn delete_claude_skill(skill_name: String) -> Result<(), String> {
+    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+    let skills_dir = home_dir.join(".claude/skills");
+    let skill_path = skills_dir.join(&skill_name);
+
+    if skill_path.exists() {
+        std::fs::remove_dir_all(&skill_path)
+            .map_err(|e| format!("Failed to delete skill directory '{}': {}", skill_path.display(), e))?;
+        println!("🗑️  Deleted skill directory: {}", skill_path.display());
+    } else {
+        return Err(format!("Skill '{}' not found", skill_name));
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn open_skills_directory() -> Result<(), String> {
+	let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
+	let skills_dir = home_dir.join(".claude/skills");
+
+	// Ensure the directory exists
+	if !skills_dir.exists() {
+		std::fs::create_dir_all(&skills_dir)
+			.map_err(|e| format!("Failed to create skills directory: {}", e))?;
+	}
+
+	// Open the directory in the system's file manager
+	#[cfg(target_os = "macos")]
+	{
+		std::process::Command::new("open")
+			.arg(&skills_dir)
+			.spawn()
+			.map_err(|e| format!("Failed to open skills directory: {}", e))?;
+	}
+
+	#[cfg(target_os = "windows")]
+	{
+		std::process::Command::new("explorer")
+			.arg(&skills_dir)
+			.spawn()
+			.map_err(|e| format!("Failed to open skills directory: {}", e))?;
+	}
+
+	#[cfg(target_os = "linux")]
+	{
+		std::process::Command::new("xdg-open")
+			.arg(&skills_dir)
+			.spawn()
+			.map_err(|e| format!("Failed to open skills directory: {}", e))?;
+	}
+
+	#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+	{
+		return Err("Unsupported operating system".to_string());
+	}
+
+	Ok(())
 }

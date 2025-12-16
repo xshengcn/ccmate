@@ -54,6 +54,20 @@ export interface CommandFile {
 	exists: boolean;
 }
 
+export interface SkillMetadata {
+	name: string;
+	description: string;
+	allowedTools?: string[];
+}
+
+export interface SkillFile {
+	name: string;
+	path: string;
+	content: string;
+	exists: boolean;
+	metadata?: SkillMetadata;
+}
+
 export const useConfigFiles = () => {
 	return useQuery({
 		queryKey: ["config-files"],
@@ -491,6 +505,25 @@ export const useWriteClaudeConfigFile = () => {
 	});
 };
 
+export const useDeleteClaudeProject = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (projectPath: string) =>
+			invoke<void>("delete_claude_project", { projectPath }),
+		onSuccess: () => {
+			toast.success("项目删除成功");
+			queryClient.invalidateQueries({ queryKey: ["claude-projects"] });
+			queryClient.invalidateQueries({ queryKey: ["claude-config-file"] });
+		},
+		onError: (error) => {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			toast.error(`删除项目失败: ${errorMessage}`);
+		},
+	});
+};
+
 // Notification settings hooks
 
 export const useNotificationSettings = () => {
@@ -612,6 +645,42 @@ export const useDeleteClaudeAgent = () => {
 			const errorMessage =
 				error instanceof Error ? error.message : String(error);
 			toast.error(`Failed to delete agent: ${errorMessage}`);
+		},
+	});
+};
+
+// Skills management hooks
+export const useClaudeSkills = () =>
+	useQuery({
+		queryKey: ["claude-skills"],
+		queryFn: () => invoke<SkillFile[]>("read_claude_skills"),
+	});
+
+export const useDeleteClaudeSkill = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (skillName: string) =>
+			invoke<void>("delete_claude_skill", { skillName }),
+		onSuccess: () => {
+			toast.success(i18n.t("skills.skillDeleted"));
+			queryClient.invalidateQueries({ queryKey: ["claude-skills"] });
+		},
+		onError: (error) => {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			toast.error(i18n.t("skills.skillDeleteFailed", { error: errorMessage }));
+		},
+	});
+};
+
+export const useOpenSkillsDirectory = () => {
+	return useMutation({
+		mutationFn: () => invoke<void>("open_skills_directory"),
+		onError: (error) => {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			toast.error(i18n.t("skills.openFolderFailed", { error: errorMessage }));
 		},
 	});
 };

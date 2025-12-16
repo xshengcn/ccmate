@@ -8,6 +8,7 @@ import { ConfigSwitcherPage } from "./pages/ConfigSwitcherPage";
 import { MCPPage } from "./pages/MCPPage";
 import { MemoryPage } from "./pages/MemoryPage";
 import { NotificationPage } from "./pages/NotificationPage";
+import { SkillsPage } from "./pages/SkillsPage";
 import { Detail } from "./pages/projects/Detail";
 import { ProjectsLayout } from "./pages/projects/Layout";
 import { List } from "./pages/projects/List";
@@ -92,6 +93,14 @@ const router = createBrowserRouter([
 				element: (
 					<RouteWrapper>
 						<CommandsPage />
+					</RouteWrapper>
+				),
+			},
+			{
+				path: "skills",
+				element: (
+					<RouteWrapper>
+						<SkillsPage />
 					</RouteWrapper>
 				),
 			},

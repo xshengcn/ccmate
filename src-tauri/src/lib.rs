@@ -187,6 +187,7 @@ pub fn run() {
             read_claude_projects,
             read_claude_config_file,
             write_claude_config_file,
+            delete_claude_project,
             check_for_updates,
             install_and_restart,
             rebuild_tray_menu_command,
@@ -205,7 +206,10 @@ pub fn run() {
             delete_claude_command,
             read_claude_agents,
             write_claude_agent,
-            delete_claude_agent
+            delete_claude_agent,
+            read_claude_skills,
+            delete_claude_skill,
+            open_skills_directory
         ])
         .on_window_event(|window, event| {
             #[cfg(target_os = "macos")]

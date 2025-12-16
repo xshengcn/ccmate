@@ -7,6 +7,7 @@ import {
 	ChevronsUpDown,
 	FolderIcon,
 	SaveIcon,
+	TrashIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,9 +29,21 @@ import {
 	PopoverTrigger,
 } from "../../components/ui/popover";
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "../../components/ui/alert-dialog";
+import {
 	useClaudeConfigFile,
 	useClaudeProjects,
 	useWriteClaudeConfigFile,
+	useDeleteClaudeProject,
 } from "../../lib/query";
 import { useCodeMirrorTheme } from "../../lib/use-codemirror-theme";
 import { cn } from "../../lib/utils";
@@ -50,6 +63,7 @@ export function Detail() {
 		error: configError,
 	} = useClaudeConfigFile();
 	const writeClaudeConfig = useWriteClaudeConfigFile();
+	const deleteProject = useDeleteClaudeProject();
 	const [jsonContent, setJsonContent] = useState("");
 	const [hasChanges, setHasChanges] = useState(false);
 	const [comboboxOpen, setComboboxOpen] = useState(false);
@@ -92,6 +106,19 @@ export function Detail() {
 			toast.error(t("projects.detail.invalidJson"));
 		}
 	}, [jsonContent, path, claudeConfig, writeClaudeConfig, t]);
+
+	const handleDeleteProject = async () => {
+		if (!path) return;
+
+		try {
+			const decodedPath = decodeURIComponent(path);
+			await deleteProject.mutateAsync(decodedPath);
+			// 删除成功后导航到列表页
+			navigate("/projects");
+		} catch (error) {
+			// 错误已经在 mutation hook 中处理了
+		}
+	};
 
 	const handleContentChange = useCallback((value: string) => {
 		setJsonContent(value);
@@ -268,6 +295,39 @@ export function Detail() {
 				</div>
 
 				<div className="flex items-center gap-2">
+					<AlertDialog>
+						<AlertDialogTrigger asChild>
+							<Button
+								variant="outline"
+								size="sm"
+								disabled={deleteProject.isPending}
+								className="flex items-center gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+							>
+								<TrashIcon className="h-4 w-4" />
+								{deleteProject.isPending ? t("projects.deleting") : t("projects.delete")}
+							</Button>
+						</AlertDialogTrigger>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>{t("projects.deleteTitle")}</AlertDialogTitle>
+								<AlertDialogDescription>
+									{t("projects.deleteConfirm")}
+									<div className="mt-2 p-2 bg-muted rounded text-sm font-mono">
+										{project.path}
+									</div>
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>{t("projects.cancel")}</AlertDialogCancel>
+								<AlertDialogAction
+									onClick={handleDeleteProject}
+									className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+								>
+									{t("projects.delete")}
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
 					<Button
 						onClick={handleSave}
 						disabled={!hasChanges || writeClaudeConfig.isPending}

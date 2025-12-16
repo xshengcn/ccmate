@@ -6,6 +6,7 @@ import {
 	CpuIcon,
 	FileJsonIcon,
 	FolderIcon,
+	Gamepad2Icon,
 	SettingsIcon,
 	TerminalIcon,
 } from "lucide-react";
@@ -40,7 +41,12 @@ export function Layout() {
 		{
 			to: "/agents",
 			icon: BotIcon,
-			label: "Agents",
+			label: t("navigation.agents"),
+		},
+		{
+			to: "/skills",
+			icon: Gamepad2Icon,
+			label: t("navigation.skills"),
 		},
 		{
 			to: "/memory",
