@@ -154,7 +154,7 @@ The system processes JSONL files that contain various types of records. Usage da
     "id": "...",
     "type": "message",
     "role": "assistant",
-    "model": "glm-4.6",
+    "model": "glm-4.7",
     "content": [...],
     "usage": {
       "input_tokens": 3505,
